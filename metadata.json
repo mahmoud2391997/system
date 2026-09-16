@@ -1,0 +1,6 @@
+{
+  "name": "Nexus AI Operations Platform",
+  "description": "Unified AI Operations Platform with approval-gated automation engine spanning Personal, CRM, Team, and ERP tiers in a single account.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
