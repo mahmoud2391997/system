@@ -235,6 +235,17 @@ export const CRMView: React.FC<CRMViewProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Honest Preview Disclaimer Banner */}
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
+        <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold block text-amber-950">Tier Preview — Phase 4 CRM Engine</span>
+          <p className="text-amber-800 mt-0.5">
+            This screen illustrates the upcoming Startup tier CRM pipeline. Records displayed here are demonstration models and are not yet committed to the production relational database.
+          </p>
+        </div>
+      </div>
+
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
         <div>

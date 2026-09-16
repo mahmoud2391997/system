@@ -30,6 +30,7 @@ export interface Workspace {
 export interface WorkspaceMember {
   id: string;
   workspace_id: string;
+  user_id?: string;
   name: string;
   email: string;
   role: 'owner' | 'admin' | 'manager' | 'member';

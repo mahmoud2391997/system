@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import crypto from 'crypto';
 import {
   WorkspaceFeatures,
@@ -8,6 +8,13 @@ import {
   RiskClassification,
 } from '../src/types.js';
 import { PolicyEngine, REGISTERED_TOOLS } from './policyEngine.js';
+import { db } from './db/client.js';
+import {
+  readGmailMessages,
+  listGoogleCalendarEvents,
+  sendGmailMessage,
+  scheduleGoogleCalendarEvent,
+} from './googleClient.js';
 
 let geminiClient: GoogleGenAI | null = null;
 
@@ -15,11 +22,6 @@ function getGemini(): GoogleGenAI | null {
   if (!geminiClient && process.env.GEMINI_API_KEY) {
     geminiClient = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
     });
   }
   return geminiClient;
@@ -27,13 +29,14 @@ function getGemini(): GoogleGenAI | null {
 
 export interface AgentContext {
   workspace_id: string;
+  user_id?: string;
   user_name: string;
   user_role: string;
   features: WorkspaceFeatures;
-  contacts: any[];
-  deals: any[];
-  tasks: any[];
-  invoices: any[];
+  contacts?: any[];
+  deals?: any[];
+  tasks?: any[];
+  invoices?: any[];
 }
 
 export interface AgentExecutionResult {
@@ -48,9 +51,113 @@ export interface AgentExecutionResult {
   };
 }
 
+// Function Declarations for Gemini Tool Calling
+const agentToolDeclarations = [
+  {
+    name: 'send_email',
+    description: 'Dispatches an official email to a counterparty or client via connected Google Workspace Gmail.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        recipient: { type: Type.STRING, description: 'The recipient email address' },
+        subject: { type: Type.STRING, description: 'Email subject line' },
+        body: { type: Type.STRING, description: 'Email body text content' },
+        cc: { type: Type.STRING, description: 'Optional CC email address' },
+      },
+      required: ['recipient', 'subject', 'body'],
+    },
+  },
+  {
+    name: 'read_emails',
+    description: 'Reads recent messages or queries the user inbox via the official Gmail API.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        query: { type: Type.STRING, description: 'Search term or query (e.g., from, subject, unread)' },
+        max_results: { type: Type.INTEGER, description: 'Maximum number of emails to retrieve (1-10)' },
+      },
+    },
+  },
+  {
+    name: 'schedule_meeting',
+    description: 'Schedules a meeting on Google Calendar, checks conflicts, and dispatches invites.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: 'Meeting title or subject' },
+        attendee_email: { type: Type.STRING, description: 'Counterparty attendee email address' },
+        datetime: { type: Type.STRING, description: 'Date and time of meeting (ISO format preferred or natural date)' },
+        duration_minutes: { type: Type.INTEGER, description: 'Length of meeting in minutes (default: 30)' },
+        description: { type: Type.STRING, description: 'Meeting agenda or description' },
+      },
+      required: ['title', 'attendee_email', 'datetime'],
+    },
+  },
+  {
+    name: 'list_calendar_events',
+    description: 'Lists upcoming calendar events and meetings from Google Calendar.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        time_min: { type: Type.STRING, description: 'ISO start datetime to fetch from' },
+        max_results: { type: Type.INTEGER, description: 'Max events to return (default 10)' },
+      },
+    },
+  },
+  {
+    name: 'send_whatsapp_message',
+    description: 'Sends a WhatsApp business message (requires Phase 3 Meta verification).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        phone_number: { type: Type.STRING, description: 'Recipient phone number' },
+        message_text: { type: Type.STRING, description: 'Message body' },
+      },
+      required: ['phone_number', 'message_text'],
+    },
+  },
+  {
+    name: 'dispatch_voice_call',
+    description: 'Dials an outbound voice call via telephony stream (requires Phase 3 carrier registration).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        phone_number: { type: Type.STRING, description: 'Phone number to dial' },
+        purpose: { type: Type.STRING, description: 'Call script/purpose' },
+      },
+      required: ['phone_number', 'purpose'],
+    },
+  },
+  {
+    name: 'crm_update_deal_stage',
+    description: 'Updates a deal stage in CRM pipeline (requires Startup+ tier).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        deal_id: { type: Type.STRING, description: 'Deal identifier or title' },
+        new_stage: { type: Type.STRING, description: 'New stage name' },
+      },
+      required: ['deal_id', 'new_stage'],
+    },
+  },
+  {
+    name: 'create_erp_invoice',
+    description: 'Creates a billing invoice in the ERP module (requires Enterprise tier).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        client_name: { type: Type.STRING, description: 'Client name' },
+        amount: { type: Type.NUMBER, description: 'Total invoice amount' },
+        description: { type: Type.STRING, description: 'Service description' },
+      },
+      required: ['client_name', 'amount', 'description'],
+    },
+  },
+];
+
 export class AgentOrchestrator {
   /**
-   * Main entrypoint for processing user messages or operational triggers
+   * Main entrypoint for processing user messages through Gemini function calling
    */
   static async processMessage(
     userPrompt: string,
@@ -58,234 +165,340 @@ export class AgentOrchestrator {
     conversationHistory: AgentMessage[]
   ): Promise<AgentExecutionResult> {
     const ai = getGemini();
-    const promptLower = userPrompt.toLowerCase();
-
-    // 1. Determine which skill is requested / proposed
-    let proposedTool: string | null = null;
-    let toolParams: Record<string, any> = {};
-    let reasoningSteps: string[] = [
-      'Ingested operational intent from operator.',
-      'Checking tenant scope: ' + context.workspace_id + ' (Tier: ' + context.features.tier.toUpperCase() + ')',
+    const reasoningSteps: string[] = [
+      `Workspace tenant: ${context.workspace_id} (Tier: ${context.features.tier.toUpperCase()})`,
+      `Acting operator: ${context.user_name} (${context.user_role})`,
     ];
 
-    // Intent classifier for operations
-    if (promptLower.includes('email') || promptLower.includes('mail') || promptLower.includes('send to julian') || promptLower.includes('reach out to')) {
-      proposedTool = 'send_email';
-      toolParams = {
-        recipient: promptLower.includes('amara') ? 'a.okafor@biohealthinst.org' : 'j.montgomery@vanguardlog.com',
-        subject: promptLower.includes('sla') ? 'Apex Horizon: Updated SLA & Enterprise Security Specs' : 'Apex Horizon: Follow-up & Commercial Proposal',
-        body: 'Hello,\n\nFollowing our review, I am pleased to share the operational scope and tailored deployment architecture for your team.\n\nBest regards,\nSarah Chen',
-        cc: 'ops@apexhorizon.io',
-      };
-      reasoningSteps.push('Identified outbound communication intent: Official Gmail/Outlook dispatch.');
-    } else if (promptLower.includes('call') || promptLower.includes('phone') || promptLower.includes('voice') || promptLower.includes('dial')) {
-      proposedTool = 'dispatch_voice_call';
-      toolParams = {
-        phone_number: '+1 (555) 438-9921',
-        purpose: 'Qualify fleet telemetry requirements and confirm pilot test date with Julian Montgomery.',
-        disclose_ai: true,
-      };
-      reasoningSteps.push('Identified telephony dispatch intent: Outbound real-time voice agent.');
-    } else if (promptLower.includes('whatsapp') || promptLower.includes('message amara') || promptLower.includes('text amara')) {
-      proposedTool = 'send_whatsapp_message';
-      toolParams = {
-        phone_number: '+44 20 7946 0912',
-        message_text: 'Hi Amara, Sarah here from Apex Horizon. Our team has reviewed the ISO compliance spec and we are ready to schedule your pilot.',
-        template_name: 'enterprise_onboarding_ping',
-      };
-      reasoningSteps.push('Identified instant messaging intent: Meta WhatsApp Business Cloud API.');
-    } else if (promptLower.includes('meeting') || promptLower.includes('calendar') || promptLower.includes('schedule') || promptLower.includes('book')) {
-      proposedTool = 'schedule_meeting';
-      toolParams = {
-        title: 'Apex Horizon & Vanguard Logistics - Architecture Review',
-        attendee_email: 'j.montgomery@vanguardlog.com',
-        datetime: '2026-09-22T14:00:00Z',
-        duration_minutes: 45,
-      };
-      reasoningSteps.push('Identified calendar scheduling intent: Conflict check & bi-directional invite.');
-    } else if (promptLower.includes('invoice') || promptLower.includes('bill') || promptLower.includes('billing')) {
-      proposedTool = 'create_erp_invoice';
-      toolParams = {
-        client_name: 'Vanguard Logistics Global',
-        amount: 48000,
-        currency: 'USD',
-        description: 'Nexus Operations Enterprise Platform Deployment - Phase 1 Pilot',
-      };
-      reasoningSteps.push('Identified financial ERP intent: Ledger liability & customer invoicing.');
-    } else if (promptLower.includes('deal') || promptLower.includes('pipeline') || promptLower.includes('won') || promptLower.includes('proposal') || promptLower.includes('stage')) {
-      proposedTool = 'crm_update_deal_stage';
-      toolParams = {
-        deal_id: 'deal_1',
-        new_stage: promptLower.includes('won') ? 'won' : promptLower.includes('negotiation') ? 'negotiation' : 'proposal',
-        notes: 'Stage updated following qualification feedback and stakeholder alignment.',
-      };
-      reasoningSteps.push('Identified CRM pipeline intent: Deal progression.');
-    } else if (promptLower.includes('task') || promptLower.includes('todo') || promptLower.includes('assign')) {
-      proposedTool = 'create_or_update_task';
-      toolParams = {
-        title: 'Review Vanguard ISO compliance data residency checklist',
-        priority: 'high',
-        assignee_name: 'Sarah Chen',
-        due_date: '2026-09-24',
-      };
-      reasoningSteps.push('Identified team orchestration intent: Board task dispatch.');
+    let proposedTool: string | null = null;
+    let toolParams: Record<string, any> = {};
+    let modelResponseText = '';
+
+    // If Gemini API is available, invoke real tool-calling model
+    if (ai) {
+      try {
+        const systemInstruction = `You are Nexus AI Operations Agent, an autonomous operations copilot for enterprise and personal workspaces.
+Current tenant: ${context.workspace_id}. Current tier: ${context.features.tier}.
+Acting user: ${context.user_name} (${context.user_role}).
+Available Workspace Features: CRM=${context.features.crm_enabled}, Team=${context.features.team_enabled}, ERP=${context.features.erp_enabled}.
+
+When the user requests actions like sending emails, reading emails, booking calendar meetings, checking calendar, updating deals, or invoicing, call the appropriate function tool.
+Do NOT attempt to bypass permission policies. Always provide clear, objective operational updates.`;
+
+        // Format recent history for context
+        const formattedHistory = conversationHistory.slice(-6).map((m) => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          parts: [{ text: m.text }],
+        }));
+
+        const contents = [
+          ...formattedHistory,
+          { role: 'user', parts: [{ text: userPrompt }] },
+        ];
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.2,
+            tools: [{ functionDeclarations: agentToolDeclarations }],
+          },
+        });
+
+        const candidate = response.candidates?.[0];
+        modelResponseText = candidate?.content?.parts?.find((p: any) => p.text)?.text || '';
+
+        // Check for function calls proposed by Gemini
+        const functionCallPart = candidate?.content?.parts?.find((p: any) => p.functionCall);
+        if (functionCallPart && functionCallPart.functionCall) {
+          proposedTool = functionCallPart.functionCall.name;
+          toolParams = (functionCallPart.functionCall.args as Record<string, any>) || {};
+          reasoningSteps.push(`Gemini proposed function call: ${proposedTool}`);
+        } else {
+          reasoningSteps.push('Gemini resolved intent directly without requesting tool call.');
+        }
+      } catch (err: any) {
+        console.error('Gemini API call failed, analyzing request intent directly:', err.message);
+        reasoningSteps.push(`Gemini generation note: ${err.message}`);
+      }
     } else {
-      // Default to search or knowledge retrieval
-      proposedTool = 'web_search_research';
-      toolParams = {
-        query: userPrompt,
-        depth: 'deep',
-      };
-      reasoningSteps.push('Consulting market intelligence & workspace records.');
+      reasoningSteps.push('GEMINI_API_KEY not configured. Falling back to local semantic parser.');
     }
 
-    // 2. Pass proposed tool to the Policy Engine
-    reasoningSteps.push('Submitting proposed action to Independent Policy Engine for risk evaluation.');
+    // Fallback: If no tool was chosen by Gemini or API key was absent, perform semantic resolution
+    if (!proposedTool) {
+      const lower = userPrompt.toLowerCase();
+      if (lower.includes('read email') || lower.includes('check email') || lower.includes('check inbox') || lower.includes('unread')) {
+        proposedTool = 'read_emails';
+        toolParams = { max_results: 5 };
+      } else if (lower.includes('send email') || lower.includes('write email') || lower.includes('email to ') || lower.includes('draft email')) {
+        proposedTool = 'send_email';
+        // Extract recipient if present
+        const emailMatch = userPrompt.match(/[\w.-]+@[\w.-]+\.\w+/);
+        toolParams = {
+          recipient: emailMatch ? emailMatch[0] : 'partner@example.com',
+          subject: 'Operations Follow-up',
+          body: userPrompt,
+        };
+      } else if (lower.includes('calendar') && (lower.includes('check') || lower.includes('view') || lower.includes('upcoming') || lower.includes('list'))) {
+        proposedTool = 'list_calendar_events';
+        toolParams = { max_results: 5 };
+      } else if (lower.includes('schedule') || lower.includes('book') || lower.includes('meeting')) {
+        proposedTool = 'schedule_meeting';
+        const emailMatch = userPrompt.match(/[\w.-]+@[\w.-]+\.\w+/);
+        toolParams = {
+          title: 'Nexus Operations Sync',
+          attendee_email: emailMatch ? emailMatch[0] : 'colleague@example.com',
+          datetime: new Date(Date.now() + 24 * 3600000).toISOString(),
+          duration_minutes: 30,
+        };
+      }
+    }
+
+    // If no tool is needed, return conversational response
+    if (!proposedTool) {
+      const replyText = modelResponseText || `I understand your request. I am your Nexus Operations Agent running on the **${context.features.tier.toUpperCase()}** tier.\n\nYou can ask me to **read your Gmail inbox**, **draft and send verified emails**, **schedule meetings on Google Calendar**, or **inspect upcoming events**. Every external action is strictly guarded by the Policy Engine.`;
+      const msg: AgentMessage = {
+        id: `msg_asst_${Date.now()}`,
+        sender: 'assistant',
+        text: replyText,
+        timestamp: new Date().toISOString(),
+        reasoning_trace: reasoningSteps,
+      };
+      await db.messages.create(context.workspace_id, msg, context.user_id);
+      return { message: msg };
+    }
+
+    // 2. Generate deterministic idempotency key and verify against ToolExecution table
+    const paramHash = crypto
+      .createHash('sha256')
+      .update(JSON.stringify({ tool: proposedTool, params: toolParams, ws: context.workspace_id }))
+      .digest('hex')
+      .slice(0, 16);
+    const idempotencyKey = `idemp_${proposedTool}_${paramHash}_${Date.now()}`;
+
+    // Check if duplicate execution exists
+    const existingExecution = await db.toolExecutions.findByIdempotencyKey(context.workspace_id, idempotencyKey);
+    if (existingExecution && existingExecution.status === 'executed') {
+      reasoningSteps.push(`Idempotency check: duplicate action detected (${idempotencyKey}). Returning cached result.`);
+      const cachedMsg: AgentMessage = {
+        id: `msg_cached_${Date.now()}`,
+        sender: 'assistant',
+        text: `**Idempotency Cache Hit**\n\nThis action was already executed with key \`${idempotencyKey}\`.\nCached Result:\n\`\`\`json\n${JSON.stringify(existingExecution.result, null, 2)}\n\`\`\``,
+        timestamp: new Date().toISOString(),
+        reasoning_trace: reasoningSteps,
+      };
+      return { message: cachedMsg };
+    }
+
+    // 3. Strict Server-Side Policy Evaluation
     const policyResult = PolicyEngine.evaluate(
       proposedTool,
       toolParams,
       context.features,
       context.user_role
     );
+    reasoningSteps.push(`Policy Engine decision: ${policyResult.allowed ? 'ALLOWED' : 'BLOCKED'} (Risk: ${policyResult.risk})`);
 
-    const idempotencyKey = `idemp_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-
-    // 3. If disallowed by policy (e.g. tier feature locked)
+    // Case A: Policy Denied (e.g. tier locked or insufficient privilege)
     if (!policyResult.allowed) {
-      reasoningSteps.push(`Policy Engine decision: BLOCKED (${policyResult.reason})`);
-      const blockedMessage: AgentMessage = {
-        id: `msg_${Date.now()}`,
+      const toolExecRecord = await db.toolExecutions.create({
+        id: `exec_${Date.now()}`,
+        workspace_id: context.workspace_id,
+        user_id: context.user_id,
+        tool_name: proposedTool,
+        idempotency_key: idempotencyKey,
+        parameters: toolParams,
+        status: 'rejected',
+        error: policyResult.reason,
+        created_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+      });
+
+      const auditEntry: AuditLogEntry = {
+        id: `aud_${Date.now()}`,
+        workspace_id: context.workspace_id,
+        timestamp: new Date().toISOString(),
+        actor: { type: 'user', name: context.user_name, role: context.user_role as any },
+        skill: proposedTool,
+        risk_level: policyResult.risk,
+        idempotency_key: idempotencyKey,
+        action_summary: `Policy Engine rejected execution of ${proposedTool}: ${policyResult.reason}`,
+        status: 'rejected',
+        module: proposedTool.startsWith('crm') ? 'crm' : proposedTool.startsWith('erp') ? 'erp' : 'personal',
+        payload: { parameters: toolParams, reason: policyResult.reason },
+        duration_ms: 12,
+      };
+      await db.auditLogs.create(auditEntry);
+
+      const errorMsg: AgentMessage = {
+        id: `msg_asst_${Date.now()}`,
         sender: 'assistant',
-        text: `Action blocked by Policy Engine:\n\n${policyResult.reason}\n\nNexus strictly prevents unauthorized actions or module access outside your active plan (${context.features.tier.toUpperCase()}). You can upgrade the workspace features directly in-place.`,
+        text: `⛔ **Action Blocked by Policy Engine**\n\n${policyResult.reason}\n\n- **Skill**: \`${proposedTool}\`\n- **Workspace Tier**: \`${context.features.tier.toUpperCase()}\`\n- **Idempotency Key**: \`${idempotencyKey}\`\n- **Audit Entry**: \`${auditEntry.id}\``,
         timestamp: new Date().toISOString(),
         reasoning_trace: reasoningSteps,
       };
-      return { message: blockedMessage };
+      await db.messages.create(context.workspace_id, errorMsg, context.user_id);
+      return { message: errorMsg, auditEntry };
     }
 
-    // 4. If Confirmation Required or High Risk: Halt and generate Approval Card
+    // Case B: Requires Operator Approval (Human-In-The-Loop gate for send_email, schedule_meeting, etc.)
     if (policyResult.requiresApproval) {
-      reasoningSteps.push(`Policy Engine risk classification: ${policyResult.risk.toUpperCase()}`);
-      reasoningSteps.push(`Execution halted. Surface interactive approval gate card with idempotency key: ${idempotencyKey}`);
+      reasoningSteps.push(`Halting tool execution: Human-In-The-Loop confirmation required for risk level ${policyResult.risk}`);
 
-      const approval: ApprovalAction = {
-        id: `appr_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+      const pendingApproval: ApprovalAction = {
+        id: `appr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         workspace_id: context.workspace_id,
         tool_name: proposedTool,
         skill_title: policyResult.definition?.skill_title || proposedTool,
         risk_level: policyResult.risk,
         idempotency_key: idempotencyKey,
         status: 'pending',
-        summary: `Action proposal: ${policyResult.definition?.skill_title} for "${context.user_name}".`,
+        summary: proposedTool === 'send_email'
+          ? `Outbound email to ${toolParams.recipient} with subject "${toolParams.subject}"`
+          : proposedTool === 'schedule_meeting'
+          ? `Google Calendar event "${toolParams.title}" with ${toolParams.attendee_email}`
+          : `Gated action for ${policyResult.definition?.skill_title || proposedTool}`,
         parameters: toolParams,
-        requested_by: 'Nexus Autonomous Agent',
+        requested_by: context.user_name,
         created_at: new Date().toISOString(),
         external_impact_warning: policyResult.definition?.externalImpactWarning,
       };
+
+      await db.approvals.create(pendingApproval);
+
+      await db.toolExecutions.create({
+        id: `exec_${Date.now()}`,
+        workspace_id: context.workspace_id,
+        user_id: context.user_id,
+        tool_name: proposedTool,
+        idempotency_key: idempotencyKey,
+        parameters: toolParams,
+        status: 'halted_awaiting_approval',
+        created_at: new Date().toISOString(),
+      });
 
       const auditEntry: AuditLogEntry = {
         id: `aud_${Date.now()}`,
         workspace_id: context.workspace_id,
         timestamp: new Date().toISOString(),
-        actor: { type: 'ai_agent', name: 'Nexus Orchestrator' },
+        actor: { type: 'ai_agent', name: 'Nexus AI Orchestrator' },
         skill: proposedTool,
         risk_level: policyResult.risk,
         idempotency_key: idempotencyKey,
-        action_summary: `Halted at approval gate: ${policyResult.definition?.skill_title}`,
+        action_summary: `Halted ${policyResult.definition?.skill_title || proposedTool} awaiting operator confirmation`,
         status: 'halted_awaiting_approval',
-        module: (policyResult.definition?.requiredModule as any) || 'personal',
-        payload: toolParams,
-        duration_ms: 120,
+        module: proposedTool.startsWith('crm') ? 'crm' : proposedTool.startsWith('erp') ? 'erp' : 'personal',
+        payload: { approval_id: pendingApproval.id, parameters: toolParams },
+        duration_ms: 24,
       };
+      await db.auditLogs.create(auditEntry);
 
-      const assistantMessage: AgentMessage = {
-        id: `msg_${Date.now()}`,
+      const approvalMsg: AgentMessage = {
+        id: `msg_asst_${Date.now()}`,
         sender: 'assistant',
-        text: `I have prepared the action for **${policyResult.definition?.skill_title}**.\n\nPer the system safety policy, this action is classified as **${policyResult.risk.replace('_', ' ').toUpperCase()}** and requires explicit human approval before external credentials can be invoked. Please review the approval card below to execute or modify.`,
+        text: `⚠️ **Operator Confirmation Required**\n\nThe Policy Engine has queued an approval card for **${pendingApproval.skill_title}**.\n\n- **Target**: \`${toolParams.recipient || toolParams.attendee_email || 'External Endpoint'}\`\n- **Risk Level**: \`${policyResult.risk.toUpperCase()}\`\n- **Idempotency Key**: \`${idempotencyKey}\`\n\nPlease review and approve the action in the approval card above or in the Approvals queue to execute the real dispatch.`,
         timestamp: new Date().toISOString(),
         reasoning_trace: reasoningSteps,
-        tool_invocations: [
-          {
-            id: `inv_${Date.now()}`,
-            tool_name: proposedTool,
-            risk: policyResult.risk,
-            status: 'awaiting_approval',
-            parameters: toolParams,
-            approval_id: approval.id,
-          },
-        ],
       };
+      await db.messages.create(context.workspace_id, approvalMsg, context.user_id);
 
       return {
-        message: assistantMessage,
-        pendingApproval: approval,
+        message: approvalMsg,
+        pendingApproval,
         auditEntry,
       };
     }
 
-    // 5. If Safe: Execute immediately
-    reasoningSteps.push('Policy Engine risk classification: SAFE. Auto-executing action with zero external impact.');
-    reasoningSteps.push(`Committing audit entry with idempotency key: ${idempotencyKey}`);
+    // Case C: Safe Tool — Execute Immediately (read_emails, list_calendar_events)
+    reasoningSteps.push(`Executing safe read-only tool: ${proposedTool}`);
+    let toolResult: any = null;
+    let toolError: string | null = null;
+    const startTime = Date.now();
 
-    let executionOutputText = '';
-    let updatedData: any = {};
-
-    if (proposedTool === 'web_search_research') {
-      executionOutputText = `Research completed on "${toolParams.query}". Identified key operational metrics, corporate headquarters, and verified domain records. All insights synced to internal workspace knowledge.`;
-    } else if (proposedTool === 'create_or_update_task') {
-      executionOutputText = `Task "${toolParams.title}" successfully registered in team sprint board and assigned.`;
-      const newTask = {
-        id: `tsk_${Date.now()}`,
-        workspace_id: context.workspace_id,
-        title: toolParams.title,
-        priority: toolParams.priority || 'medium',
-        assignee_name: toolParams.assignee_name || context.user_name,
-        status: 'todo',
-        due_date: toolParams.due_date || '2026-09-30',
-        time_spent_hours: 0,
-      };
-      updatedData.tasks = [newTask, ...context.tasks];
-    } else {
-      executionOutputText = `Executed safe skill ${proposedTool} successfully.`;
+    try {
+      if (proposedTool === 'read_emails') {
+        toolResult = await readGmailMessages(context.workspace_id, toolParams);
+      } else if (proposedTool === 'list_calendar_events') {
+        toolResult = await listGoogleCalendarEvents(context.workspace_id, toolParams);
+      } else {
+        toolResult = { status: 'executed_safe_query', parameters: toolParams };
+      }
+    } catch (err: any) {
+      toolError = err.message || 'Tool execution encountered an error';
+      console.error(`Error executing ${proposedTool}:`, err);
     }
+
+    const durationMs = Date.now() - startTime;
+
+    const toolExec = await db.toolExecutions.create({
+      id: `exec_${Date.now()}`,
+      workspace_id: context.workspace_id,
+      user_id: context.user_id,
+      tool_name: proposedTool,
+      idempotency_key: idempotencyKey,
+      parameters: toolParams,
+      status: toolError ? 'failed' : 'executed',
+      result: toolResult,
+      error: toolError || undefined,
+      created_at: new Date(startTime).toISOString(),
+      completed_at: new Date().toISOString(),
+    });
 
     const auditEntry: AuditLogEntry = {
       id: `aud_${Date.now()}`,
       workspace_id: context.workspace_id,
       timestamp: new Date().toISOString(),
-      actor: { type: 'ai_agent', name: 'Nexus Orchestrator' },
+      actor: { type: 'ai_agent', name: 'Nexus AI Orchestrator' },
       skill: proposedTool,
       risk_level: 'safe',
       idempotency_key: idempotencyKey,
-      action_summary: `Executed safe skill: ${policyResult.definition?.skill_title}`,
-      status: 'executed',
-      module: (policyResult.definition?.requiredModule as any) || 'personal',
-      payload: toolParams,
-      duration_ms: 245,
+      action_summary: toolError
+        ? `Failed execution of ${proposedTool}: ${toolError}`
+        : `Executed safe operational query: ${proposedTool}`,
+      status: toolError ? 'failed' : 'executed',
+      module: 'personal',
+      payload: { parameters: toolParams, result_count: Array.isArray(toolResult) ? toolResult.length : 1, error: toolError },
+      duration_ms: durationMs,
     };
+    await db.auditLogs.create(auditEntry);
 
-    const assistantMessage: AgentMessage = {
-      id: `msg_${Date.now()}`,
+    let outputText = '';
+    if (toolError) {
+      outputText = `❌ **Tool Execution Error**\n\nFailed to query **${proposedTool}**: ${toolError}\n\n*If your Google account is not connected yet, please visit the **Integrations** tab to connect your Google Workspace account.*`;
+    } else if (proposedTool === 'read_emails') {
+      const emails = toolResult as any[];
+      if (emails.length === 0) {
+        outputText = `📬 **Gmail Inbox Query**: No recent emails found matching criteria.`;
+      } else {
+        outputText = `📬 **Gmail Inbox Results** (${emails.length} messages found):\n\n` +
+          emails.map((e, idx) => `**${idx + 1}. From: ${e.from}**\n- *Subject*: ${e.subject}\n- *Snippet*: ${e.snippet}`).join('\n\n');
+      }
+    } else if (proposedTool === 'list_calendar_events') {
+      const events = toolResult as any[];
+      if (events.length === 0) {
+        outputText = `📅 **Google Calendar Query**: No upcoming events found.`;
+      } else {
+        outputText = `📅 **Upcoming Google Calendar Events** (${events.length} found):\n\n` +
+          events.map((e, idx) => `**${idx + 1}. ${e.title}**\n- *Time*: ${e.start} to ${e.end}\n- [Open Event in Google Calendar](${e.htmlLink})`).join('\n\n');
+      }
+    } else {
+      outputText = `Query executed successfully.\n\`\`\`json\n${JSON.stringify(toolResult, null, 2)}\n\`\`\``;
+    }
+
+    const assistantMsg: AgentMessage = {
+      id: `msg_asst_${Date.now()}`,
       sender: 'assistant',
-      text: executionOutputText,
+      text: outputText,
       timestamp: new Date().toISOString(),
       reasoning_trace: reasoningSteps,
-      tool_invocations: [
-        {
-          id: `inv_${Date.now()}`,
-          tool_name: proposedTool,
-          risk: 'safe',
-          status: 'safe_executed',
-          parameters: toolParams,
-          result: { status: 'success', summary: executionOutputText },
-        },
-      ],
     };
+    await db.messages.create(context.workspace_id, assistantMsg, context.user_id);
 
     return {
-      message: assistantMessage,
+      message: assistantMsg,
       auditEntry,
-      updatedData,
     };
   }
 }

@@ -176,6 +176,17 @@ export const TeamView: React.FC<TeamViewProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Honest Preview Disclaimer Banner */}
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
+        <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold block text-amber-950">Tier Preview — Phase 5 Team Engine</span>
+          <p className="text-amber-800 mt-0.5">
+            This screen illustrates collaborative sprint boards and multi-seat permissions for the Team tier. Tasks shown here are preview records.
+          </p>
+        </div>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
         <div>

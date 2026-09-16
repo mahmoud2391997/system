@@ -31,6 +31,16 @@ export const REGISTERED_TOOLS: Record<string, ToolDefinition> = {
       filter: { type: 'string', required: false, description: 'Optional search keyword' },
     },
   },
+  read_emails: {
+    name: 'read_emails',
+    skill_title: 'Gmail Inbox Query & Read',
+    description: 'Reads recent messages from the user Gmail inbox or searches with a query.',
+    defaultRisk: 'safe',
+    parametersSchema: {
+      query: { type: 'string', required: false, description: 'Search term or filter' },
+      max_results: { type: 'number', required: false, description: 'Number of results (1-10)' },
+    },
+  },
   send_email: {
     name: 'send_email',
     skill_title: 'Official Gmail / Outlook Email Dispatch',
@@ -42,6 +52,16 @@ export const REGISTERED_TOOLS: Record<string, ToolDefinition> = {
       subject: { type: 'string', required: true, description: 'Subject line' },
       body: { type: 'string', required: true, description: 'Email body text' },
       cc: { type: 'string', required: false, description: 'Optional CC email' },
+    },
+  },
+  list_calendar_events: {
+    name: 'list_calendar_events',
+    skill_title: 'Google Calendar Event Reader',
+    description: 'Lists upcoming meetings and scheduled events on the user calendar.',
+    defaultRisk: 'safe',
+    parametersSchema: {
+      time_min: { type: 'string', required: false, description: 'ISO start date' },
+      max_results: { type: 'number', required: false, description: 'Maximum events to return' },
     },
   },
   schedule_meeting: {

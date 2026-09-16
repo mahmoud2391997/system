@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Workspace,
   WorkspaceFeatures,
@@ -23,6 +23,7 @@ import { ERPView } from './components/ERPView';
 import { AuditLedgerView } from './components/AuditLedgerView';
 import { IntegrationsView } from './components/IntegrationsView';
 import { UpgradeModal } from './components/UpgradeModal';
+import { AuthView } from './components/AuthView';
 import { Loader2 } from 'lucide-react';
 
 export default function App() {
@@ -31,6 +32,14 @@ export default function App() {
   const [isUpdatingTier, setIsUpdatingTier] = useState(false);
   const [isAgentLoading, setIsAgentLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    email: string;
+    name: string;
+    avatar?: string;
+  } | null>(null);
 
   // Application Data State
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -46,62 +55,105 @@ export default function App() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
 
-  // Fetch initial data
-  const loadAllData = async () => {
+  // Authenticated fetch wrapper
+  const fetchWithAuth = useCallback((url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('nexus_token');
+    const headers = new Headers(options.headers || {});
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    return fetch(url, { ...options, headers, credentials: 'include' });
+  }, []);
+
+  // Fetch all workspace data
+  const loadAllData = useCallback(async () => {
     try {
       const [wsRes, intRes, apprRes, audRes, msgRes] = await Promise.all([
-        fetch('/api/workspace').then((r) => r.json()),
-        fetch('/api/integrations').then((r) => r.json()),
-        fetch('/api/approvals').then((r) => r.json()),
-        fetch('/api/audit-logs').then((r) => r.json()),
-        fetch('/api/messages').then((r) => r.json()),
+        fetchWithAuth('/api/workspace').then((r) => r.ok ? r.json() : null),
+        fetchWithAuth('/api/integrations').then((r) => r.ok ? r.json() : null),
+        fetchWithAuth('/api/approvals').then((r) => r.ok ? r.json() : null),
+        fetchWithAuth('/api/audit-logs').then((r) => r.ok ? r.json() : null),
+        fetchWithAuth('/api/messages').then((r) => r.ok ? r.json() : null),
       ]);
 
-      setWorkspace(wsRes.workspace);
-      setFeatures(wsRes.features);
-      setMembers(wsRes.members);
-      setIntegrations(intRes.integrations);
-      setApprovals(apprRes.approvals);
-      setAuditLogs(audRes.auditLogs);
-      setMessages(msgRes.messages);
+      if (wsRes) {
+        setWorkspace(wsRes.workspace);
+        setFeatures(wsRes.features);
+        setMembers(wsRes.members || []);
+      }
+      if (intRes) setIntegrations(intRes.integrations || []);
+      if (apprRes) setApprovals(apprRes.approvals || []);
+      if (audRes) setAuditLogs(audRes.auditLogs || []);
+      if (msgRes) setMessages(msgRes.messages || []);
 
-      // Load module data if unlocked
-      if (wsRes.features.crm_enabled) {
-        const crmRes = await fetch('/api/crm').then((r) => r.json());
-        if (!crmRes.locked) {
+      // Load preview module data
+      if (wsRes?.features?.crm_enabled) {
+        const crmRes = await fetchWithAuth('/api/crm').then((r) => r.ok ? r.json() : null);
+        if (crmRes && !crmRes.locked) {
           setContacts(crmRes.contacts || []);
           setDeals(crmRes.deals || []);
         }
       }
-      if (wsRes.features.team_enabled) {
-        const teamRes = await fetch('/api/team').then((r) => r.json());
-        if (!teamRes.locked) {
+      if (wsRes?.features?.team_enabled) {
+        const teamRes = await fetchWithAuth('/api/team').then((r) => r.ok ? r.json() : null);
+        if (teamRes && !teamRes.locked) {
           setTasks(teamRes.tasks || []);
         }
       }
-      if (wsRes.features.erp_enabled) {
-        const erpRes = await fetch('/api/erp').then((r) => r.json());
-        if (!erpRes.locked) {
+      if (wsRes?.features?.erp_enabled) {
+        const erpRes = await fetchWithAuth('/api/erp').then((r) => r.ok ? r.json() : null);
+        if (erpRes && !erpRes.locked) {
           setInvoices(erpRes.invoices || []);
           setInventory(erpRes.inventory || []);
         }
       }
     } catch (err) {
-      console.error('Failed to load initial data:', err);
-    } finally {
-      setIsInitialLoading(false);
+      console.error('Failed to load workspace data:', err);
     }
-  };
+  }, [fetchWithAuth]);
 
+  // Check auth status on mount
   useEffect(() => {
-    loadAllData();
-  }, []);
+    const checkAuth = async () => {
+      try {
+        const res = await fetchWithAuth('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setCurrentUser(data.user);
+            await loadAllData();
+            setIsInitialLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Auth verification error:', err);
+      }
+      setCurrentUser(null);
+      setIsInitialLoading(false);
+    };
+
+    checkAuth();
+  }, [fetchWithAuth, loadAllData]);
+
+  // Handle Logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+    localStorage.removeItem('nexus_token');
+    setCurrentUser(null);
+    setWorkspace(null);
+    setFeatures(null);
+  };
 
   // Send message to agent
   const handleSendMessage = async (text: string) => {
     setIsAgentLoading(true);
     try {
-      const res = await fetch('/api/agent/chat', {
+      const res = await fetchWithAuth('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text }),
@@ -118,7 +170,6 @@ export default function App() {
         setAuditLogs((prev) => [data.auditEntry, ...prev]);
       }
 
-      // Refresh module data
       await loadAllData();
     } catch (err) {
       console.error('Error sending message:', err);
@@ -130,7 +181,7 @@ export default function App() {
   // Decide approval (Approve / Reject)
   const handleDecideApproval = async (id: string, decision: 'approve' | 'reject', notes?: string) => {
     try {
-      const res = await fetch(`/api/approvals/${id}/decide`, {
+      const res = await fetchWithAuth(`/api/approvals/${id}/decide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decision, notes }),
@@ -138,11 +189,12 @@ export default function App() {
       const data = await res.json();
 
       if (data.success) {
-        // Update local approvals state
         setApprovals((prev) =>
           prev.map((a) => (a.id === id ? { ...a, status: decision === 'approve' ? 'approved' : 'rejected' } : a))
         );
-        // Refresh all data to pull newly generated tasks/deals/invoices and audit entries
+        if (data.features) {
+          setFeatures(data.features);
+        }
         await loadAllData();
       }
     } catch (err) {
@@ -154,7 +206,7 @@ export default function App() {
   const handleSelectTier = async (targetTier: WorkspaceTier) => {
     setIsUpdatingTier(true);
     try {
-      const res = await fetch('/api/workspace/tier', {
+      const res = await fetchWithAuth('/api/workspace/tier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ targetTier }),
@@ -172,254 +224,13 @@ export default function App() {
     }
   };
 
-  // Advance deal stage
-  const handleAdvanceDealStage = async (dealId: string, nextStage: Deal['stage']) => {
-    try {
-      const res = await fetch('/api/crm/deals/stage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dealId, stage: nextStage }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setDeals((prev) => prev.map((d) => (d.id === dealId ? { ...d, stage: nextStage } : d)));
-      }
-    } catch (err) {
-      console.error('Error advancing deal stage:', err);
-    }
-  };
-
-  // Create CRM Contact
-  const handleCreateContact = async (contactData: Partial<LeadContact>) => {
-    try {
-      const res = await fetch('/api/crm/contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(contactData),
-      });
-      const data = await res.json();
-      if (data.success && data.contact) {
-        setContacts((prev) => [data.contact, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error creating contact:', err);
-    }
-  };
-
-  // Create CRM Deal
-  const handleCreateDeal = async (dealData: Partial<Deal>) => {
-    try {
-      const res = await fetch('/api/crm/deals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dealData),
-      });
-      const data = await res.json();
-      if (data.success && data.deal) {
-        setDeals((prev) => [data.deal, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error creating deal:', err);
-    }
-  };
-
-  // Add note to contact
-  const handleAddContactNote = async (contactId: string, text: string) => {
-    try {
-      const res = await fetch(`/api/crm/contacts/${contactId}/notes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, author: 'Sarah Chen (Admin)' }),
-      });
-      const data = await res.json();
-      if (data.success && data.note) {
-        setContacts((prev) =>
-          prev.map((c) =>
-            c.id === contactId
-              ? { ...c, notes: [data.note, ...(c.notes || [])], last_activity: 'Note added just now' }
-              : c
-          )
-        );
-      }
-    } catch (err) {
-      console.error('Error adding contact note:', err);
-    }
-  };
-
-  // Team Task handlers
-  const handleCreateTask = async (task: { title: string; priority: ProjectTask['priority']; assignee_name: string; due_date?: string }) => {
-    try {
-      const res = await fetch('/api/team/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(task),
-      });
-      const data = await res.json();
-      if (data.success && data.task) {
-        setTasks((prev) => [data.task, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error creating task:', err);
-    }
-  };
-
-  const handleUpdateTaskStatus = async (taskId: string, status: ProjectTask['status']) => {
-    try {
-      const res = await fetch(`/api/team/tasks/${taskId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status } : t)));
-      }
-    } catch (err) {
-      console.error('Error updating task status:', err);
-    }
-  };
-
-  const handleLogTaskTime = async (taskId: string, hours: number) => {
-    try {
-      const res = await fetch(`/api/team/tasks/${taskId}/time`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hours }),
-      });
-      const data = await res.json();
-      if (data.success && data.task) {
-        setTasks((prev) => prev.map((t) => (t.id === taskId ? data.task : t)));
-      }
-    } catch (err) {
-      console.error('Error logging task time:', err);
-    }
-  };
-
-  const handleInviteMember = async (memberData: { name: string; email: string; role: WorkspaceMember['role'] }) => {
-    try {
-      const res = await fetch('/api/team/members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(memberData),
-      });
-      const data = await res.json();
-      if (data.success && data.member) {
-        setMembers((prev) => [...prev, data.member]);
-      }
-    } catch (err) {
-      console.error('Error inviting member:', err);
-    }
-  };
-
-  // ERP Operations
-  const handleCreateInvoice = async (invoiceData: Partial<Invoice>) => {
-    try {
-      const res = await fetch('/api/erp/invoices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(invoiceData),
-      });
-      const data = await res.json();
-      if (data.success && data.invoice) {
-        setInvoices((prev) => [data.invoice, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error creating invoice:', err);
-    }
-  };
-
-  const handleUpdateInvoiceStatus = async (invoiceId: string, status: Invoice['status']) => {
-    try {
-      const res = await fetch(`/api/erp/invoices/${invoiceId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setInvoices((prev) => prev.map((inv) => (inv.id === invoiceId ? { ...inv, status } : inv)));
-      }
-    } catch (err) {
-      console.error('Error updating invoice status:', err);
-    }
-  };
-
-  const handleCreateInventoryItem = async (itemData: Partial<InventoryItem>) => {
-    try {
-      const res = await fetch('/api/erp/inventory', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(itemData),
-      });
-      const data = await res.json();
-      if (data.success && data.item) {
-        setInventory((prev) => [data.item, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding inventory SKU:', err);
-    }
-  };
-
-  const handleUpdateInventoryStock = async (itemId: string, delta: number) => {
-    try {
-      const res = await fetch(`/api/erp/inventory/${itemId}/stock`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delta }),
-      });
-      const data = await res.json();
-      if (data.success && data.item) {
-        setInventory((prev) => prev.map((item) => (item.id === itemId ? data.item : item)));
-      }
-    } catch (err) {
-      console.error('Error updating inventory stock:', err);
-    }
-  };
-
-  // Integrations Vault Operations
-  const handlePingIntegration = async (integrationId: string) => {
-    try {
-      const res = await fetch('/api/integrations/ping', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: integrationId }),
-      });
-      const data = await res.json();
-      if (data.success && data.integration) {
-        setIntegrations((prev) =>
-          prev.map((int) => (int.id === integrationId ? data.integration : int))
-        );
-      }
-    } catch (err) {
-      console.error('Error pinging integration:', err);
-    }
-  };
-
-  const handleToggleIntegration = async (integrationId: string) => {
-    try {
-      const res = await fetch('/api/integrations/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: integrationId }),
-      });
-      const data = await res.json();
-      if (data.success && data.integration) {
-        setIntegrations((prev) =>
-          prev.map((int) => (int.id === integrationId ? data.integration : int))
-        );
-      }
-    } catch (err) {
-      console.error('Error toggling integration:', err);
-    }
-  };
-
   // Trigger action from modules
   const handleTriggerAction = (prompt: string) => {
     setActiveTab('terminal');
     handleSendMessage(prompt);
   };
 
-  if (isInitialLoading || !workspace || !features) {
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
         <div className="flex flex-col items-center gap-3">
@@ -432,6 +243,20 @@ export default function App() {
     );
   }
 
+  // If not authenticated, render AuthView
+  if (!currentUser || !workspace || !features) {
+    return (
+      <AuthView
+        onSuccess={async (authData) => {
+          setCurrentUser(authData.user);
+          setIsInitialLoading(true);
+          await loadAllData();
+          setIsInitialLoading(false);
+        }}
+      />
+    );
+  }
+
   const pendingApprovalsCount = approvals.filter((a) => a.status === 'pending').length;
 
   return (
@@ -441,7 +266,9 @@ export default function App() {
         workspace={workspace}
         features={features}
         members={members}
+        currentUser={currentUser}
         onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+        onLogout={handleLogout}
         pendingApprovalsCount={pendingApprovalsCount}
       />
 
@@ -472,11 +299,10 @@ export default function App() {
             contacts={contacts}
             deals={deals}
             onUpgradeInPlace={() => handleSelectTier('startup')}
-            onAdvanceDealStage={handleAdvanceDealStage}
+            onAdvanceDealStage={async (dealId, nextStage) => {
+              setDeals((prev) => prev.map((d) => d.id === dealId ? { ...d, stage: nextStage } : d));
+            }}
             onTriggerAction={handleTriggerAction}
-            onCreateContact={handleCreateContact}
-            onCreateDeal={handleCreateDeal}
-            onAddNote={handleAddContactNote}
           />
         )}
 
@@ -486,10 +312,20 @@ export default function App() {
             tasks={tasks}
             members={members}
             onUpgradeInPlace={() => handleSelectTier('team')}
-            onCreateTask={handleCreateTask}
-            onUpdateTaskStatus={handleUpdateTaskStatus}
-            onLogTaskTime={handleLogTaskTime}
-            onInviteMember={handleInviteMember}
+            onCreateTask={(task) => {
+              setTasks((prev) => [
+                {
+                  id: `task_${Date.now()}`,
+                  workspace_id: workspace.id,
+                  title: task.title,
+                  priority: task.priority,
+                  assignee: task.assignee_name,
+                  status: 'todo',
+                  due_date: task.due_date || '2026-10-01',
+                },
+                ...prev,
+              ]);
+            }}
             onTriggerAction={handleTriggerAction}
           />
         )}
@@ -501,10 +337,6 @@ export default function App() {
             inventory={inventory}
             onUpgradeInPlace={() => handleSelectTier('enterprise')}
             onTriggerAction={handleTriggerAction}
-            onCreateInvoice={handleCreateInvoice}
-            onUpdateInvoiceStatus={handleUpdateInvoiceStatus}
-            onCreateInventoryItem={handleCreateInventoryItem}
-            onUpdateInventoryStock={handleUpdateInventoryStock}
           />
         )}
 
@@ -513,8 +345,7 @@ export default function App() {
         {activeTab === 'integrations' && (
           <IntegrationsView
             integrations={integrations}
-            onPingIntegration={handlePingIntegration}
-            onToggleIntegration={handleToggleIntegration}
+            onRefresh={loadAllData}
           />
         )}
       </main>
