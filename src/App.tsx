@@ -232,10 +232,10 @@ export default function App() {
 
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-[#15120F] flex items-center justify-center text-[#F3E9D2]">
+      <div className="min-h-screen bg-[#F8F7F3] flex items-center justify-center text-[#20232D]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-7 h-7 animate-spin text-[#FFB000]" />
-          <span className="font-mono text-xs text-[#B8850A] tracking-wider">
+          <Loader2 className="w-7 h-7 animate-spin text-[#171717]" />
+          <span className="font-mono text-xs text-[#737373] tracking-wider">
             nexus@core:~$ initializing session...
           </span>
         </div>
@@ -260,7 +260,7 @@ export default function App() {
   const pendingApprovalsCount = approvals.filter((a) => a.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-[#15120F] text-[#F3E9D2] font-sans flex flex-col selection:bg-[#5C4620] selection:text-[#FFB000]">
+    <div className="min-h-screen bg-[#F8F7F3] text-[#20232D] font-sans flex flex-col selection:bg-[#5C4620] selection:text-[#171717]">
       {/* Global Header */}
       <Header
         workspace={workspace}
