@@ -1,1 +1,68 @@
 @import "tailwindcss";
+
+@theme {
+  --color-nexus-bg: #F8F7F3;
+  --color-nexus-surface: #FFFFFF;
+  --color-nexus-primary: #171717;
+  --color-nexus-text: #20232D;
+  --color-nexus-muted: #737373;
+  --color-nexus-border: #E5E5E5;
+  --color-nexus-secondary: #F1F1F1;
+  --color-nexus-destructive: #DC2626;
+
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+:root {
+  --bg: #F8F7F3;
+  --surface: #FFFFFF;
+  --primary: #171717;
+  --text: #20232D;
+  --muted: #737373;
+  --border: #E5E5E5;
+  --secondary: #F1F1F1;
+  --destructive: #DC2626;
+
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-sans: 'IBM Plex Sans', -apple-system, sans-serif;
+}
+
+html {
+  background-color: #F8F7F3;
+  color: #20232D;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Restrained scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F7F3;
+}
+::-webkit-scrollbar-thumb {
+  background: #E5E5E5;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #737373;
+}
+
+@keyframes cursorBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: cursorBlink 0.9s infinite;
+}

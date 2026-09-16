@@ -232,11 +232,11 @@ export default function App() {
 
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
+      <div className="min-h-screen bg-[#15120F] flex items-center justify-center text-[#F3E9D2]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
-          <span className="font-mono text-xs text-slate-400">
-            Initializing Nexus AI Operations Platform...
+          <Loader2 className="w-7 h-7 animate-spin text-[#FFB000]" />
+          <span className="font-mono text-xs text-[#B8850A] tracking-wider">
+            nexus@core:~$ initializing session...
           </span>
         </div>
       </div>
@@ -260,7 +260,7 @@ export default function App() {
   const pendingApprovalsCount = approvals.filter((a) => a.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-900 font-sans flex flex-col">
+    <div className="min-h-screen bg-[#15120F] text-[#F3E9D2] font-sans flex flex-col selection:bg-[#5C4620] selection:text-[#FFB000]">
       {/* Global Header */}
       <Header
         workspace={workspace}

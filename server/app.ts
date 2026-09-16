@@ -10,14 +10,15 @@ import {
   registerUser,
   extractToken,
   verifyToken,
+  signOAuthState,
+  verifyOAuthState,
 } from './auth.js';
-import { verifyPassword } from './crypto.js';
+import { verifyPassword, encryptToken, decryptToken } from './crypto.js';
 import { AgentOrchestrator } from './agent.js';
 import {
   sendGmailMessage,
   scheduleGoogleCalendarEvent,
 } from './googleClient.js';
-import { encryptToken } from './crypto.js';
 import {
   WorkspaceTier,
   ApprovalAction,
@@ -427,77 +428,321 @@ export function createExpressApp(): express.Express {
     res.json({ integrations: sanitized });
   });
 
-  // Connect Google Workspace with real OAuth credentials
-  apiRouter.post('/integrations/google/connect', requireAuth, async (req: AuthenticatedRequest, res) => {
-    const ws = req.workspace!;
-    const { client_id, client_secret, refresh_token, access_token } = req.body;
-
-    if (!refresh_token && !access_token) {
-      return res.status(400).json({ error: 'Either an OAuth refresh token or access token is required.' });
+  // Helper to derive exact Google OAuth redirect URI
+  function getGoogleRedirectUri(req: Request): string {
+    if (process.env.GOOGLE_REDIRECT_URI) {
+      return process.env.GOOGLE_REDIRECT_URI;
     }
+    if (process.env.APP_URL) {
+      return `${process.env.APP_URL.replace(/\/$/, '')}/api/auth/google/callback`;
+    }
+    const host = req.get('host');
+    const proto = (req.headers['x-forwarded-proto'] as string) || (host?.includes('localhost') ? 'http' : 'https');
+    return `${proto}://${host}/api/auth/google/callback`;
+  }
 
-    const credentials = {
-      client_id: client_id || process.env.GOOGLE_CLIENT_ID,
-      client_secret: client_secret || process.env.GOOGLE_CLIENT_SECRET,
-      refresh_token,
-      access_token,
-      expires_at: access_token ? Date.now() + 3500 * 1000 : undefined,
-    };
+  function renderOAuthCallbackHtml(success: boolean, title: string, message: string) {
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${title}</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      .card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 32px;
+        max-width: 460px;
+        width: 100%;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        text-align: center;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 12px;
+      }
+      .badge-success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+      .badge-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+      h2 { margin: 0 0 8px 0; font-size: 18px; font-weight: 700; color: ${success ? '#0f172a' : '#991b1b'}; }
+      p { margin: 0 0 20px 0; font-size: 13px; color: #64748b; line-height: 1.5; }
+      .btn {
+        display: inline-block;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: #2563eb;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="badge ${success ? 'badge-success' : 'badge-error'}">
+        ${success ? 'OAuth 2.0 Connected' : 'Authorization Error'}
+      </div>
+      <h2>${title}</h2>
+      <p>${message}</p>
+      <button class="btn" onclick="handleClose()">Return to Nexus</button>
+      <script>
+        function notifyParent() {
+          try {
+            if (window.opener) {
+              window.opener.postMessage({
+                type: '${success ? 'GOOGLE_AUTH_SUCCESS' : 'GOOGLE_AUTH_ERROR'}',
+                success: ${success},
+                message: ${JSON.stringify(message)}
+              }, '*');
+              setTimeout(() => {
+                window.close();
+              }, 1200);
+            }
+          } catch (e) {
+            console.error('Failed to notify opener:', e);
+          }
+        }
+        function handleClose() {
+          if (window.opener) {
+            window.close();
+          } else {
+            window.location.href = '/?tab=integrations&google_connected=${success}';
+          }
+        }
+        notifyParent();
+      </script>
+    </div>
+  </body>
+</html>`;
+  }
 
-    const encrypted = encryptToken(JSON.stringify(credentials));
-
-    // Update both Gmail and Calendar integration records
-    await db.integrations.upsert({
-      id: 'int_gmail',
-      workspace_id: ws.id,
-      provider: 'Google Cloud Platform',
-      name: 'Google Workspace Gmail API',
-      type: 'email',
-      auth_type: 'OAuth 2.0 (Server-Side AES-256 Vault)',
-      connected: true,
-      encrypted_credentials: encrypted,
-      scopes: 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly',
-      last_sync: 'Just now (Connected)',
-      description: 'Send and read official workspace emails with zero prompt token leakage.',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-
-    await db.integrations.upsert({
-      id: 'int_calendar',
-      workspace_id: ws.id,
-      provider: 'Google Calendar v3',
-      name: 'Google Calendar API',
-      type: 'calendar',
-      auth_type: 'Scoped Workspace OAuth',
-      connected: true,
-      encrypted_credentials: encrypted,
-      scopes: 'https://www.googleapis.com/auth/calendar.events',
-      last_sync: 'Just now (Connected)',
-      description: 'Book events, check free/busy slots, and dispatch verified meeting invites.',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-
-    const auditEntry: AuditLogEntry = {
-      id: `aud_${Date.now()}`,
-      workspace_id: ws.id,
-      timestamp: new Date().toISOString(),
-      actor: { type: 'user', name: req.user!.name, role: (req.member?.role || 'owner') as any },
-      skill: 'google_workspace_oauth_connect',
-      risk_level: 'high_risk',
-      idempotency_key: `idemp_gw_connect_${Date.now()}`,
-      action_summary: 'Connected Google Workspace OAuth credentials to encrypted token vault.',
-      status: 'executed',
-      module: 'personal',
-      payload: { provider: 'Google Cloud Platform', scopes: 'gmail.send, gmail.readonly, calendar.events' },
-      duration_ms: 45,
-    };
-    await db.auditLogs.create(auditEntry);
+  // Google OAuth Status Endpoint
+  apiRouter.get('/auth/google/status', (req: Request, res: Response) => {
+    const hasClientId = Boolean(process.env.GOOGLE_CLIENT_ID);
+    const hasClientSecret = Boolean(process.env.GOOGLE_CLIENT_SECRET);
+    const configured = hasClientId && hasClientSecret;
+    const redirectUri = getGoogleRedirectUri(req);
+    const missing = [
+      !hasClientId ? 'GOOGLE_CLIENT_ID' : null,
+      !hasClientSecret ? 'GOOGLE_CLIENT_SECRET' : null,
+    ].filter(Boolean);
 
     res.json({
-      success: true,
-      message: 'Google Workspace successfully connected to AES-256 encrypted vault.',
+      configured,
+      missing,
+      redirectUri,
+      clientIdPreview: hasClientId ? `${process.env.GOOGLE_CLIENT_ID!.slice(0, 16)}...` : null,
+    });
+  });
+
+  // 1. Google OAuth Start Flow (Consent URL generator & redirector)
+  apiRouter.get('/auth/google/start', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+    const ws = req.workspace!;
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = getGoogleRedirectUri(req);
+
+    if (!clientId || !clientSecret) {
+      const errorMsg = 'Google OAuth credentials not configured on server. Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.';
+      if (req.query.format === 'json' || req.headers.accept?.includes('application/json')) {
+        return res.status(400).json({ success: false, error: errorMsg, configured: false, redirectUri });
+      }
+      return res.status(400).send(renderOAuthCallbackHtml(false, 'OAuth Not Configured', errorMsg));
+    }
+
+    const state = signOAuthState({
+      workspaceId: ws.id,
+      userId: req.user!.id,
+      returnTo: (req.query.returnTo as string) || '/?tab=integrations',
+    });
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: [
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/calendar.events',
+      ].join(' '),
+      access_type: 'offline',
+      prompt: 'consent',
+      state,
+    });
+
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+
+    if (req.query.format === 'json' || req.headers.accept?.includes('application/json')) {
+      return res.json({
+        success: true,
+        url: authUrl,
+        configured: true,
+        redirectUri,
+      });
+    }
+
+    return res.redirect(authUrl);
+  });
+
+  // 2. Google OAuth Callback Flow (Token exchange & vault storage)
+  apiRouter.get(['/auth/google/callback', '/auth/google/callback/'], async (req: Request, res: Response) => {
+    const { code, state, error, error_description } = req.query;
+
+    if (error) {
+      return res.status(400).send(renderOAuthCallbackHtml(false, 'Google Authorization Declined', String(error_description || error)));
+    }
+
+    if (!code || !state) {
+      return res.status(400).send(renderOAuthCallbackHtml(false, 'Missing Code or State', 'Google did not provide an authorization code or state parameter.'));
+    }
+
+    const statePayload = verifyOAuthState(String(state));
+    if (!statePayload || !statePayload.workspaceId) {
+      return res.status(400).send(renderOAuthCallbackHtml(false, 'Invalid State Token', 'The OAuth state parameter is invalid or expired. Please re-initiate connection from your workspace.'));
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      return res.status(500).send(renderOAuthCallbackHtml(false, 'Server Configuration Error', 'Server is missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET.'));
+    }
+
+    const redirectUri = getGoogleRedirectUri(req);
+
+    try {
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code: String(code),
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        }),
+      });
+
+      const tokenData = (await tokenResponse.json()) as {
+        access_token?: string;
+        refresh_token?: string;
+        expires_in?: number;
+        scope?: string;
+        error?: string;
+        error_description?: string;
+      };
+
+      if (!tokenResponse.ok || !tokenData.access_token) {
+        const errDetail = tokenData.error_description || tokenData.error || 'Token exchange failed';
+        return res.status(400).send(renderOAuthCallbackHtml(false, 'Token Exchange Failed', errDetail));
+      }
+
+      // Preserve existing refresh token if re-authorizing and Google omitted refresh_token in response
+      let existingRefreshToken = '';
+      const existingGmail = await db.integrations.findById(statePayload.workspaceId, 'int_gmail');
+      if (existingGmail?.encrypted_credentials) {
+        try {
+          const decrypted = JSON.parse(decryptToken(existingGmail.encrypted_credentials));
+          existingRefreshToken = decrypted.refresh_token || '';
+        } catch {}
+      }
+
+      const finalRefreshToken = tokenData.refresh_token || existingRefreshToken;
+
+      const credentials = {
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: finalRefreshToken,
+        access_token: tokenData.access_token,
+        expires_at: Date.now() + (tokenData.expires_in || 3600) * 1000,
+        scope: tokenData.scope,
+      };
+
+      const encrypted = encryptToken(JSON.stringify(credentials));
+
+      // Update int_gmail
+      await db.integrations.upsert({
+        id: 'int_gmail',
+        workspace_id: statePayload.workspaceId,
+        provider: 'Google Cloud Platform',
+        name: 'Google Workspace Gmail API',
+        type: 'email',
+        auth_type: 'OAuth 2.0 (Server-Side AES-256 Vault)',
+        connected: true,
+        encrypted_credentials: encrypted,
+        scopes: 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly',
+        last_sync: 'Just now (Connected via OAuth 2.0)',
+        description: 'Send and read official workspace emails with zero prompt token leakage.',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+      // Update int_calendar
+      await db.integrations.upsert({
+        id: 'int_calendar',
+        workspace_id: statePayload.workspaceId,
+        provider: 'Google Calendar v3',
+        name: 'Google Calendar API',
+        type: 'calendar',
+        auth_type: 'Scoped Workspace OAuth',
+        connected: true,
+        encrypted_credentials: encrypted,
+        scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+        last_sync: 'Just now (Connected via OAuth 2.0)',
+        description: 'Book events, check free/busy slots, and dispatch verified meeting invites.',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+      // Audit log entry
+      const auditEntry: AuditLogEntry = {
+        id: `aud_${Date.now()}`,
+        workspace_id: statePayload.workspaceId,
+        timestamp: new Date().toISOString(),
+        actor: { type: 'user', name: 'Authorized Operator', role: 'owner' },
+        skill: 'google_workspace_oauth_connect',
+        risk_level: 'high_risk',
+        idempotency_key: `idemp_gw_connect_${Date.now()}`,
+        action_summary: 'Self-serve Google OAuth 2.0 consent completed. Gmail and Calendar credentials stored in AES-256 vault.',
+        status: 'executed',
+        module: 'personal',
+        payload: { provider: 'Google Cloud Platform', scopes: tokenData.scope || 'gmail.send, gmail.readonly, calendar' },
+        duration_ms: 120,
+      };
+      await db.auditLogs.create(auditEntry);
+
+      return res.send(renderOAuthCallbackHtml(true, 'Google Workspace Connected', 'Your Gmail and Google Calendar are now successfully connected to Nexus via OAuth 2.0. You can return to the platform.'));
+    } catch (err: any) {
+      return res.status(500).send(renderOAuthCallbackHtml(false, 'Connection Error', err.message || 'Unexpected error during token exchange.'));
+    }
+  });
+
+  // Deprecated manual token connect route (Replaced by OAuth 2.0 authorization code flow)
+  apiRouter.post('/integrations/google/connect', (req: Request, res: Response) => {
+    res.status(410).json({
+      error: 'Manual token pasting has been deprecated. Please use the self-serve OAuth 2.0 flow via /api/auth/google/start.',
+      oauth_start_url: '/api/auth/google/start',
     });
   });
 

@@ -5,21 +5,14 @@ import {
   ShieldAlert,
   AlertTriangle,
   Key,
-  Clock,
-  Filter,
+  Download,
+  Play,
+  Cpu,
+  Search,
   CheckCircle2,
   XCircle,
   PauseCircle,
-  FileCode,
-  Search,
-  Download,
-  Terminal,
-  Play,
-  Check,
-  Info,
-  Sliders,
-  Cpu,
-  Lock,
+  X,
 } from 'lucide-react';
 import { AuditLogEntry, RiskClassification } from '../types';
 
@@ -37,7 +30,7 @@ export const AuditLedgerView: React.FC<AuditLedgerViewProps> = ({ auditLogs }) =
   // Policy Engine Simulator State
   const [simTool, setSimTool] = useState('send_email');
   const [simParams, setSimParams] = useState(
-    JSON.stringify({ to: 'julian@vanguardlog.com', subject: 'Operations SLA Contract', amount: 48000 }, null, 2)
+    JSON.stringify({ to: 'julian@vanguard.com', subject: 'Operations SLA Contract', amount: 48000 }, null, 2)
   );
   const [simEvaluating, setSimEvaluating] = useState(false);
   const [simResult, setSimResult] = useState<any>(null);
@@ -97,51 +90,80 @@ export const AuditLedgerView: React.FC<AuditLedgerViewProps> = ({ auditLogs }) =
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nexus_immutable_audit_ledger_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `nexus_audit_ledger_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
+  const renderStatusPill = (status: string) => {
+    if (status === 'executed' || status === 'approved') {
+      return (
+        <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#2E4A3B] text-[#5FB88A] border border-[#5FB88A]/60 font-medium inline-block">
+          approved
+        </span>
+      );
+    }
+    if (status === 'halted_awaiting_approval' || status === 'pending') {
+      return (
+        <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#4A3B20] text-[#E2A23C] border border-[#E2A23C]/60 font-medium inline-block">
+          pending
+        </span>
+      );
+    }
+    if (status === 'rejected' || status === 'denied') {
+      return (
+        <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#4A2622] text-[#E2574C] border border-[#E2574C]/60 font-medium inline-block">
+          denied
+        </span>
+      );
+    }
+    return (
+      <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#2E4A3B] text-[#5FB88A] border border-[#5FB88A]/60 font-medium inline-block">
+        safe
+      </span>
+    );
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5 font-sans">
+      {/* Header Panel */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#1D1814] p-4 rounded-lg border border-[#3A2F22]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-              Security & Compliance Layer
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#FFB000] bg-[#15120F] px-2 py-0.5 rounded border border-[#3A2F22]">
+              audit-ledger // v1.4
             </span>
-            <span className="text-xs text-slate-600">• Immutable Append-Only Ledger</span>
+            <span className="text-xs text-[#F3E9D2]/50 font-mono">immutable append-only</span>
           </div>
-          <h1 className="text-lg font-bold text-slate-900 mt-1">Audit Ledger & Policy Engine Records</h1>
-          <p className="text-xs text-slate-600">
-            Every autonomous external action carries an idempotency key, risk evaluation, and human decision trail.
+          <h1 className="text-base font-bold text-[#F3E9D2] mt-1 font-sans">Audit Ledger & Policy Ledger</h1>
+          <p className="text-xs text-[#F3E9D2]/70 font-sans">
+            Every tool invocation carries an idempotency key, risk evaluation, and human decision trail.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50 text-xs">
+          <div className="inline-flex rounded border border-[#3A2F22] p-1 bg-[#15120F] text-xs font-sans">
             <button
               onClick={() => setActiveTab('logs')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                activeTab === 'logs' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1 rounded font-medium transition-colors ${
+                activeTab === 'logs' ? 'bg-[#1D1814] text-[#FFB000] border border-[#FFB000]/60' : 'text-[#F3E9D2]/60 hover:text-[#F3E9D2]'
               }`}
             >
-              Audit Trail ({auditLogs.length})
+              Audit Log ({auditLogs.length})
             </button>
             <button
               onClick={() => setActiveTab('sandbox')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1 ${
-                activeTab === 'sandbox' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1 rounded font-medium transition-colors flex items-center gap-1 ${
+                activeTab === 'sandbox' ? 'bg-[#1D1814] text-[#FFB000] border border-[#FFB000]/60' : 'text-[#F3E9D2]/60 hover:text-[#F3E9D2]'
               }`}
             >
-              <Cpu className="w-3.5 h-3.5 text-indigo-600" />
+              <Cpu className="w-3 h-3 text-[#FFB000]" />
               Policy Sandbox
             </button>
             <button
               onClick={() => setActiveTab('rules')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                activeTab === 'rules' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1 rounded font-medium transition-colors ${
+                activeTab === 'rules' ? 'bg-[#1D1814] text-[#FFB000] border border-[#FFB000]/60' : 'text-[#F3E9D2]/60 hover:text-[#F3E9D2]'
               }`}
             >
               Rules Matrix
@@ -150,10 +172,10 @@ export const AuditLedgerView: React.FC<AuditLedgerViewProps> = ({ auditLogs }) =
 
           <button
             onClick={handleExportJSON}
-            className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+            className="px-3 py-1.5 bg-[#15120F] hover:bg-[#3A2F22] text-[#FFB000] border border-[#3A2F22] rounded text-xs font-mono flex items-center gap-1.5 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Export JSON</span>
+            <span>export.json</span>
           </button>
         </div>
       </div>
@@ -161,184 +183,156 @@ export const AuditLedgerView: React.FC<AuditLedgerViewProps> = ({ auditLogs }) =
       {activeTab === 'logs' && (
         <>
           {/* Risk Level & Module Filters */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-            <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#1D1814] p-3 rounded-lg border border-[#3A2F22]">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-sans">
               <button
                 onClick={() => setSelectedRisk('all')}
-                className={`px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded border font-medium transition-colors ${
                   selectedRisk === 'all'
-                    ? 'bg-slate-900 text-white border-slate-900'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-[#15120F] text-[#FFB000] border-[#FFB000]'
+                    : 'bg-[#15120F] text-[#F3E9D2]/70 border-[#3A2F22] hover:text-[#F3E9D2]'
                 }`}
               >
                 All ({auditLogs.length})
               </button>
               <button
                 onClick={() => setSelectedRisk('safe')}
-                className={`px-3 py-1.5 rounded-lg border font-medium transition-colors flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded border font-medium transition-colors flex items-center gap-1.5 ${
                   selectedRisk === 'safe'
-                    ? 'bg-emerald-600 text-white border-emerald-600'
-                    : 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50'
+                    ? 'bg-[#2E4A3B] text-[#5FB88A] border-[#5FB88A]'
+                    : 'bg-[#15120F] text-[#5FB88A] border-[#3A2F22] hover:border-[#5FB88A]/60'
                 }`}
               >
-                <ShieldCheck className="w-3.5 h-3.5" />
+                <ShieldCheck className="w-3 h-3 text-[#5FB88A]" />
                 Safe ({riskCounts.safe})
               </button>
               <button
                 onClick={() => setSelectedRisk('confirmation_required')}
-                className={`px-3 py-1.5 rounded-lg border font-medium transition-colors flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded border font-medium transition-colors flex items-center gap-1.5 ${
                   selectedRisk === 'confirmation_required'
-                    ? 'bg-amber-600 text-white border-amber-600'
-                    : 'bg-white text-amber-800 border-amber-200 hover:bg-amber-50'
+                    ? 'bg-[#4A3B20] text-[#E2A23C] border-[#E2A23C]'
+                    : 'bg-[#15120F] text-[#E2A23C] border-[#3A2F22] hover:border-[#E2A23C]/60'
                 }`}
               >
-                <ShieldAlert className="w-3.5 h-3.5" />
+                <ShieldAlert className="w-3 h-3 text-[#E2A23C]" />
                 Gated ({riskCounts.confirmation_required})
               </button>
               <button
                 onClick={() => setSelectedRisk('high_risk')}
-                className={`px-3 py-1.5 rounded-lg border font-medium transition-colors flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded border font-medium transition-colors flex items-center gap-1.5 ${
                   selectedRisk === 'high_risk'
-                    ? 'bg-red-600 text-white border-red-600'
-                    : 'bg-white text-red-800 border-red-200 hover:bg-red-50'
+                    ? 'bg-[#4A2622] text-[#E2574C] border-[#E2574C]'
+                    : 'bg-[#15120F] text-[#E2574C] border-[#3A2F22] hover:border-[#E2574C]/60'
                 }`}
               >
-                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertTriangle className="w-3 h-3 text-[#E2574C]" />
                 High Risk ({riskCounts.high_risk})
               </button>
             </div>
 
             {/* Module dropdown & search */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 font-mono text-xs">
               <select
                 value={selectedModule}
                 onChange={(e) => setSelectedModule(e.target.value as any)}
-                className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 bg-white"
+                className="border border-[#3A2F22] rounded px-2 py-1 text-[#F3E9D2] bg-[#15120F] focus:outline-none"
               >
-                <option value="all">All Modules</option>
-                <option value="crm">CRM</option>
-                <option value="team">Team</option>
-                <option value="erp">ERP</option>
-                <option value="personal">Personal</option>
-                <option value="system">System</option>
+                <option value="all">module: all</option>
+                <option value="crm">module: crm</option>
+                <option value="team">module: team</option>
+                <option value="erp">module: erp</option>
+                <option value="personal">module: personal</option>
+                <option value="system">module: system</option>
               </select>
 
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+                <Search className="w-3 h-3 text-[#B8850A] absolute left-2.5 top-2" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Filter logs..."
-                  className="pl-8 pr-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44"
+                  placeholder="filter logs..."
+                  className="pl-7 pr-2 py-1 text-xs rounded border border-[#3A2F22] bg-[#15120F] text-[#F3E9D2] placeholder-[#B8850A]/40 focus:outline-none focus:border-[#FFB000] w-36"
                 />
               </div>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-50 text-[11px] text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
-                  <tr>
-                    <th className="py-3 px-4">Timestamp</th>
-                    <th className="py-3 px-4">Actor</th>
-                    <th className="py-3 px-4">Skill / Tool</th>
-                    <th className="py-3 px-4">Risk Level</th>
-                    <th className="py-3 px-4">Action Summary</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Idempotency Key</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredLogs.map((log) => (
-                    <tr
-                      key={log.id}
-                      onClick={() => setSelectedEntry(log)}
-                      className="hover:bg-slate-50/80 cursor-pointer transition-colors"
-                    >
-                      <td className="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span
-                          className={`font-semibold ${
-                            log.actor.type === 'ai_agent' ? 'text-indigo-600' : 'text-slate-900'
-                          }`}
-                        >
-                          {log.actor.name}
+          {/* Audit Log Entries List matching Reference Format */}
+          <div className="bg-[#1D1814] rounded-lg border border-[#3A2F22] overflow-hidden">
+            <div className="p-3 border-b border-[#3A2F22] flex items-center justify-between text-xs font-mono text-[#B8850A]">
+              <span>LEDGER STREAM // {filteredLogs.length} ENTRIES</span>
+              <span>FORMAT: [TIME] [STATE] [MACHINE EVENT]</span>
+            </div>
+
+            <div className="divide-y divide-[#3A2F22]">
+              {filteredLogs.map((log) => {
+                const timeStr = new Date(log.timestamp).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false,
+                });
+
+                return (
+                  <div
+                    key={log.id}
+                    onClick={() => setSelectedEntry(log)}
+                    className="p-3 hover:bg-[#15120F] cursor-pointer transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    {/* Reference line structure: 14:02:11 | safe | searchWeb executed — 4 results */}
+                    <div className="flex items-start sm:items-center gap-3">
+                      <span className="font-mono text-xs text-[#F3E9D2]/60 select-none min-w-[65px]">
+                        {timeStr}
+                      </span>
+                      {renderStatusPill(log.status)}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                        <span className="font-mono text-xs font-semibold text-[#FFB000]">
+                          {log.skill}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 font-mono font-medium text-slate-800">{log.skill}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {log.risk_level === 'safe' && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <ShieldCheck className="w-3 h-3" /> SAFE
-                          </span>
-                        )}
-                        {log.risk_level === 'confirmation_required' && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
-                            <ShieldAlert className="w-3 h-3" /> CONFIRMATION
-                          </span>
-                        )}
-                        {log.risk_level === 'high_risk' && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 font-semibold">
-                            <AlertTriangle className="w-3 h-3" /> HIGH RISK
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-slate-900 max-w-xs truncate">{log.action_summary}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {log.status === 'executed' && (
-                          <span className="text-emerald-600 font-medium flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Executed
-                          </span>
-                        )}
-                        {log.status === 'halted_awaiting_approval' && (
-                          <span className="text-amber-600 font-medium flex items-center gap-1">
-                            <PauseCircle className="w-3.5 h-3.5" /> Awaiting Approval
-                          </span>
-                        )}
-                        {log.status === 'rejected' && (
-                          <span className="text-red-600 font-medium flex items-center gap-1">
-                            <XCircle className="w-3.5 h-3.5" /> Rejected
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 font-mono text-[10px] text-slate-400 max-w-[140px] truncate">
+                        <span className="text-[#3A2F22] hidden sm:inline">—</span>
+                        <span className="font-sans text-xs text-[#F3E9D2] leading-snug">
+                          {log.action_summary}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 self-end sm:self-auto font-mono text-[11px] text-[#B8850A]">
+                      <span className="hidden md:inline text-[#F3E9D2]/50 font-sans">
+                        {log.actor.name}
+                      </span>
+                      <span className="truncate max-w-[140px] bg-[#15120F] px-1.5 py-0.5 rounded border border-[#3A2F22]">
                         {log.idempotency_key}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>
       )}
 
       {activeTab === 'sandbox' && (
-        /* Interactive Policy Engine Sandbox Simulator */
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-[#1D1814] p-5 rounded-lg border border-[#3A2F22]">
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-sm font-bold text-[#F3E9D2] flex items-center gap-2 font-sans">
+                <Cpu className="w-4 h-4 text-[#FFB000]" />
                 Policy Engine Evaluation Sandbox
               </h3>
-              <p className="text-xs text-slate-600 mt-1">
-                Test how the Independent Policy Engine (Section 7) classifies tools, enforces idempotency keys, and triggers human approval gates before actual dispatch.
+              <p className="text-xs text-[#F3E9D2]/70 mt-1 font-sans">
+                Test how the deterministic Policy Engine classifies tools, enforces SHA-256 idempotency keys, and halts on confirmation gates.
               </p>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-xs font-sans">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Target Skill / Tool</label>
+                <label className="block font-medium text-[#F3E9D2]/80 mb-1">Target Skill / Tool</label>
                 <select
                   value={simTool}
                   onChange={(e) => setSimTool(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono"
+                  className="w-full px-2.5 py-1.5 rounded border border-[#3A2F22] bg-[#15120F] text-[#F3E9D2] font-mono text-xs"
                 >
                   <option value="send_email">send_email (Communications - Outbound Email)</option>
                   <option value="dispatch_voice_call">dispatch_voice_call (Voice - Outbound Telephony)</option>
@@ -346,54 +340,53 @@ export const AuditLedgerView: React.FC<AuditLedgerViewProps> = ({ auditLogs }) =
                   <option value="schedule_meeting">schedule_meeting (Calendar - Invites)</option>
                   <option value="create_erp_invoice">create_erp_invoice (Finance - Legal Liability)</option>
                   <option value="execute_wire_transfer">execute_wire_transfer (Finance - Banking)</option>
-                  <option value="delete_database_schema">delete_database_schema (System - Destructive)</option>
-                  <option value="read_contact">read_contact (CRM - Query Only)</option>
-                  <option value="web_search">web_search (Research - Read Only)</option>
+                  <option value="read_contact">read_contact (CRM - Query Only / Safe)</option>
+                  <option value="web_search">web_search (Research - Read Only / Safe)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Tool Invocation Parameters (JSON)</label>
+                <label className="block font-medium text-[#F3E9D2]/80 mb-1">Invocation Parameters (JSON)</label>
                 <textarea
-                  rows={6}
+                  rows={5}
                   value={simParams}
                   onChange={(e) => setSimParams(e.target.value)}
-                  className="w-full p-3 font-mono text-xs rounded-lg border border-slate-300 bg-slate-50"
+                  className="w-full p-2.5 font-mono text-xs rounded border border-[#3A2F22] bg-[#15120F] text-[#FFB000] focus:outline-none"
                 />
               </div>
 
               <button
                 onClick={handleRunSimulator}
                 disabled={simEvaluating}
-                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-2 bg-[#FFB000] hover:bg-[#FFB000]/90 text-[#15120F] font-mono font-bold text-xs rounded flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
               >
-                <Play className="w-3.5 h-3.5" />
-                <span>{simEvaluating ? 'Evaluating Deterministic Policy...' : 'Evaluate Against Policy Engine'}</span>
+                <Play className="w-3 h-3" />
+                <span>{simEvaluating ? 'EVALUATING DETERMINISTIC POLICY...' : 'RUN POLICY EVALUATION'}</span>
               </button>
             </div>
           </div>
 
           {/* Simulator Output Panel */}
-          <div className="bg-slate-900 rounded-xl p-5 text-white flex flex-col justify-between">
+          <div className="bg-[#15120F] rounded-lg border border-[#3A2F22] p-4 text-[#F3E9D2] flex flex-col justify-between font-mono">
             <div>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <span className="text-xs font-mono text-slate-400">ENGINE RESPONSE</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-slate-700">
-                  Zero Prompt Leakage Mode
+              <div className="flex items-center justify-between pb-2.5 border-b border-[#3A2F22]">
+                <span className="text-xs text-[#B8850A]">ENGINE RESPONSE</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2E4A3B] text-[#5FB88A] border border-[#5FB88A]/50">
+                  zero-prompt-leak
                 </span>
               </div>
 
               {simResult ? (
-                <div className="mt-4 space-y-3 font-mono text-xs">
+                <div className="mt-3 space-y-2.5 text-xs">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">RISK CLASSIFICATION</span>
+                    <span className="text-[#B8850A] block text-[10px]">RISK CLASSIFICATION</span>
                     <span
-                      className={`inline-block px-2 py-0.5 rounded font-bold text-xs mt-1 ${
+                      className={`inline-block px-2 py-0.5 rounded font-mono font-bold text-xs mt-1 ${
                         simResult.risk_level === 'safe'
-                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                          ? 'bg-[#2E4A3B] text-[#5FB88A] border border-[#5FB88A]/50'
                           : simResult.risk_level === 'confirmation_required'
-                          ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                          : 'bg-red-950 text-red-300 border border-red-800'
+                          ? 'bg-[#4A3B20] text-[#E2A23C] border border-[#E2A23C]/50'
+                          : 'bg-[#4A2622] text-[#E2574C] border border-[#E2574C]/50'
                       }`}
                     >
                       {simResult.risk_level.toUpperCase()}
@@ -401,60 +394,54 @@ export const AuditLedgerView: React.FC<AuditLedgerViewProps> = ({ auditLogs }) =
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block text-[10px]">ENFORCED GATE TYPE</span>
-                    <span className="text-indigo-300 font-bold">{simResult.gate_type}</span>
+                    <span className="text-[#B8850A] block text-[10px]">GATE ENFORCEMENT</span>
+                    <span className="text-[#FFB000]">{simResult.gate_type}</span>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block text-[10px]">POLICY RATIONALE</span>
-                    <p className="text-slate-300 font-sans text-xs mt-0.5 leading-relaxed">{simResult.rationale}</p>
+                    <span className="text-[#B8850A] block text-[10px]">POLICY RATIONALE</span>
+                    <p className="text-[#F3E9D2] font-sans text-xs mt-0.5">{simResult.rationale}</p>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block text-[10px]">MINTED IDEMPOTENCY KEY</span>
-                    <span className="text-amber-400 text-[11px] select-all">{simResult.idempotency_key}</span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">ENGINE SPECIFICATION</span>
-                    <span className="text-slate-500 text-[10px]">{simResult.policy_engine_version}</span>
+                    <span className="text-[#B8850A] block text-[10px]">IDEMPOTENCY KEY</span>
+                    <span className="text-[#FFB000] text-[11px] select-all break-all">{simResult.idempotency_key}</span>
                   </div>
                 </div>
               ) : (
-                <div className="py-16 text-center text-slate-500 text-xs font-mono">
-                  Select a skill and click Evaluate to see the Policy Engine's deterministic evaluation in real time.
+                <div className="py-14 text-center text-[#B8850A] text-xs">
+                  Select a skill and run evaluation to see the Policy Engine output.
                 </div>
               )}
             </div>
 
-            <div className="pt-4 border-t border-slate-800 text-[10px] text-slate-500">
-              Nexus Policy Engine runs independently from the LLM prompt layer. Safe actions execute autonomously; confirmations require verified human signature.
+            <div className="pt-3 border-t border-[#3A2F22] text-[10px] text-[#F3E9D2]/50 font-sans">
+              Nexus Policy Engine operates independently of LLM reasoning. Model output cannot bypass gate checks.
             </div>
           </div>
         </div>
       )}
 
       {activeTab === 'rules' && (
-        /* Deterministic Security Rules Matrix */
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-6">
+        <div className="bg-[#1D1814] rounded-lg border border-[#3A2F22] p-5 space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Deterministic Safety Rules Matrix (Section 7)</h3>
-            <p className="text-xs text-slate-600 mt-1">
-              Actions are segregated by risk level. Confirmation Required actions trigger an interactive approval card with idempotency protection.
+            <h3 className="text-sm font-bold text-[#F3E9D2] font-sans">Deterministic Safety Rules Matrix</h3>
+            <p className="text-xs text-[#F3E9D2]/70 mt-1 font-sans">
+              Actions are segregated by risk classification. Confirmation-required actions trigger approval cards with idempotency locks.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
             {/* Safe */}
-            <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-3">
-              <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                SAFE (Autonomous Execution)
+            <div className="p-4 rounded-lg border border-[#2E4A3B] bg-[#15120F] space-y-2.5">
+              <div className="flex items-center gap-1.5 text-[#5FB88A] font-bold text-xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#5FB88A]" />
+                <span>SAFE (Auto-Run)</span>
               </div>
-              <p className="text-xs text-emerald-800 leading-relaxed">
-                Read-only operations, internal database lookups, and web grounding. Executed without interrupting the user.
+              <p className="text-xs text-[#F3E9D2]/70 leading-relaxed">
+                Read-only operations, database queries, and web searches. No side-effects or mutations.
               </p>
-              <ul className="text-xs text-emerald-950 font-mono space-y-1 pt-2 border-t border-emerald-200">
+              <ul className="text-xs text-[#5FB88A] font-mono space-y-1 pt-2 border-t border-[#2E4A3B]">
                 <li>• web_search</li>
                 <li>• read_contact / search_leads</li>
                 <li>• view_pipeline_deals</li>
@@ -464,15 +451,15 @@ export const AuditLedgerView: React.FC<AuditLedgerViewProps> = ({ auditLogs }) =
             </div>
 
             {/* Confirmation Required */}
-            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 space-y-3">
-              <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
-                <ShieldAlert className="w-4 h-4 text-amber-600" />
-                CONFIRMATION REQUIRED
+            <div className="p-4 rounded-lg border border-[#4A3B20] bg-[#15120F] space-y-2.5">
+              <div className="flex items-center gap-1.5 text-[#E2A23C] font-bold text-xs">
+                <ShieldAlert className="w-3.5 h-3.5 text-[#E2A23C]" />
+                <span>CONFIRMATION REQUIRED</span>
               </div>
-              <p className="text-xs text-amber-800 leading-relaxed">
-                Actions with external impact: outbound communications, calendar invites, or client notifications.
+              <p className="text-xs text-[#F3E9D2]/70 leading-relaxed">
+                Outbound communications, client messages, or meeting invitations with external parties.
               </p>
-              <ul className="text-xs text-amber-950 font-mono space-y-1 pt-2 border-t border-amber-200">
+              <ul className="text-xs text-[#E2A23C] font-mono space-y-1 pt-2 border-t border-[#4A3B20]">
                 <li>• send_email (Gmail API)</li>
                 <li>• send_whatsapp_message</li>
                 <li>• dispatch_voice_call</li>
@@ -482,69 +469,73 @@ export const AuditLedgerView: React.FC<AuditLedgerViewProps> = ({ auditLogs }) =
             </div>
 
             {/* High Risk */}
-            <div className="p-4 rounded-xl border border-red-200 bg-red-50/50 space-y-3">
-              <div className="flex items-center gap-2 text-red-900 font-bold text-xs">
-                <AlertTriangle className="w-4 h-4 text-red-600" />
-                HIGH RISK (Multi-Factor / Admin)
+            <div className="p-4 rounded-lg border border-[#4A2622] bg-[#15120F] space-y-2.5">
+              <div className="flex items-center gap-1.5 text-[#E2574C] font-bold text-xs">
+                <AlertTriangle className="w-3.5 h-3.5 text-[#E2574C]" />
+                <span>HIGH RISK (Explicit Sign-off)</span>
               </div>
-              <p className="text-xs text-red-800 leading-relaxed">
-                Financial obligations, balance sheet mutations, destructive operations, or workspace tier upgrades.
+              <p className="text-xs text-[#F3E9D2]/70 leading-relaxed">
+                Financial commitments, balance mutations, destructive record deletion, or tier changes.
               </p>
-              <ul className="text-xs text-red-950 font-mono space-y-1 pt-2 border-t border-red-200">
+              <ul className="text-xs text-[#E2574C] font-mono space-y-1 pt-2 border-t border-[#4A2622]">
                 <li>• create_erp_invoice</li>
                 <li>• execute_wire_transfer</li>
                 <li>• delete_database_schema</li>
                 <li>• workspace_upgrade_in_place</li>
-                <li>• revoke_all_member_tokens</li>
               </ul>
             </div>
           </div>
         </div>
       )}
 
-      {/* Entry Detail Drawer / Modal */}
+      {/* Entry Detail Modal in Amber Terminal styling */}
       {selectedEntry && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-xl border border-slate-200 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 bg-[#15120F]/80 backdrop-blur-xs flex items-center justify-center p-4 font-sans">
+          <div className="bg-[#1D1814] rounded-lg max-w-xl w-full p-5 shadow-2xl border border-[#3A2F22] max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2.5 border-b border-[#3A2F22]">
               <div className="flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-indigo-600" />
-                <h3 className="text-sm font-bold text-slate-900">Audit Ledger Entry #{selectedEntry.id}</h3>
+                <span className="font-mono text-xs font-bold text-[#FFB000]">
+                  ENTRY #{selectedEntry.id}
+                </span>
+                {renderStatusPill(selectedEntry.status)}
               </div>
-              <button onClick={() => setSelectedEntry(null)} className="text-slate-400 hover:text-slate-600 text-xs">
-                Close
+              <button
+                onClick={() => setSelectedEntry(null)}
+                className="text-[#F3E9D2]/50 hover:text-[#F3E9D2]"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-4 text-xs mt-4">
+            <div className="space-y-3 text-xs mt-3">
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-mono">IDEMPOTENCY KEY</span>
-                <span className="font-mono text-slate-900 bg-slate-100 px-2 py-1 rounded block mt-0.5 select-all">
+                <span className="text-[#B8850A] block text-[10px] uppercase font-mono">IDEMPOTENCY KEY</span>
+                <span className="font-mono text-[#FFB000] bg-[#15120F] px-2 py-1 rounded border border-[#3A2F22] block mt-0.5 select-all">
                   {selectedEntry.idempotency_key}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 font-mono">
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase">ACTOR</span>
-                  <span className="font-semibold text-slate-800">
+                  <span className="text-[#B8850A] block text-[10px] uppercase font-sans">ACTOR</span>
+                  <span className="text-[#F3E9D2]">
                     {selectedEntry.actor.name} ({selectedEntry.actor.type})
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase">SKILL / TOOL</span>
-                  <span className="font-mono text-slate-800">{selectedEntry.skill}</span>
+                  <span className="text-[#B8850A] block text-[10px] uppercase font-sans">SKILL / TOOL</span>
+                  <span className="text-[#FFB000]">{selectedEntry.skill}</span>
                 </div>
               </div>
 
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase">ACTION SUMMARY</span>
-                <p className="text-slate-900 font-medium mt-0.5">{selectedEntry.action_summary}</p>
+                <span className="text-[#B8850A] block text-[10px] uppercase font-sans">ACTION SUMMARY</span>
+                <p className="text-[#F3E9D2] font-sans text-xs mt-0.5">{selectedEntry.action_summary}</p>
               </div>
 
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase">IMMUTABLE PAYLOAD DUMP</span>
-                <pre className="p-3 bg-slate-900 text-slate-100 rounded-lg font-mono text-[11px] overflow-x-auto mt-1">
+                <span className="text-[#B8850A] block text-[10px] uppercase font-mono">IMMUTABLE PAYLOAD DUMP</span>
+                <pre className="p-2.5 bg-[#15120F] text-[#F3E9D2] rounded font-mono text-[11px] border border-[#3A2F22] overflow-x-auto mt-1">
                   {JSON.stringify(selectedEntry.payload || {}, null, 2)}
                 </pre>
               </div>

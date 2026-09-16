@@ -70,36 +70,42 @@ const DATA_FILE = path.join(DATA_DIR, 'nexus_db.json');
 
 let pool: pg.Pool | null = null;
 let fileDb: DatabaseSchema | null = null;
+let lastLoadedMtime = 0;
 
 function getFileDb(): DatabaseSchema {
-  if (fileDb) return fileDb;
-
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
 
   if (fs.existsSync(DATA_FILE)) {
     try {
+      const mtime = fs.statSync(DATA_FILE).mtimeMs;
+      if (fileDb && mtime <= lastLoadedMtime) {
+        return fileDb;
+      }
       const data = fs.readFileSync(DATA_FILE, 'utf8');
       fileDb = JSON.parse(data);
+      lastLoadedMtime = mtime;
       return fileDb!;
     } catch (err) {
       console.warn('Could not parse existing .data/nexus_db.json, initializing fresh store.');
     }
   }
 
-  fileDb = {
-    users: [],
-    workspaces: [],
-    workspace_members: [],
-    workspace_features: [],
-    integrations: [],
-    messages: [],
-    tool_executions: [],
-    approvals: [],
-    audit_logs: [],
-  };
-  saveFileDb();
+  if (!fileDb) {
+    fileDb = {
+      users: [],
+      workspaces: [],
+      workspace_members: [],
+      workspace_features: [],
+      integrations: [],
+      messages: [],
+      tool_executions: [],
+      approvals: [],
+      audit_logs: [],
+    };
+    saveFileDb();
+  }
   return fileDb;
 }
 
@@ -112,6 +118,9 @@ function saveFileDb() {
     const tmpFile = `${DATA_FILE}.tmp`;
     fs.writeFileSync(tmpFile, JSON.stringify(fileDb, null, 2), 'utf8');
     fs.renameSync(tmpFile, DATA_FILE);
+    if (fs.existsSync(DATA_FILE)) {
+      lastLoadedMtime = fs.statSync(DATA_FILE).mtimeMs;
+    }
   } catch (err) {
     console.error('Failed to save to local persistence file:', err);
   }

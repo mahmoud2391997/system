@@ -20,17 +20,15 @@ export const Navigation: React.FC<NavigationProps> = ({
   const tabs = [
     {
       id: 'terminal' as ActiveTab,
-      label: 'AI Terminal',
-      sublabel: 'Agent & Approval Gate',
+      label: 'Terminal & Agent',
       icon: Terminal,
       badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : null,
-      badgeColor: 'bg-amber-500 text-white',
+      badgeColor: 'bg-[#4A3B20] text-[#E2A23C] border border-[#E2A23C]/50',
       enabled: true,
     },
     {
       id: 'crm' as ActiveTab,
       label: 'CRM & Pipeline',
-      sublabel: 'Leads, Deals & Timeline',
       icon: Users,
       enabled: features.crm_enabled,
       requiredTier: 'Startup',
@@ -38,7 +36,6 @@ export const Navigation: React.FC<NavigationProps> = ({
     {
       id: 'team' as ActiveTab,
       label: 'Team & Projects',
-      sublabel: 'Tasks, Boards & Roles',
       icon: CheckSquare,
       enabled: features.team_enabled,
       requiredTier: 'Team',
@@ -46,7 +43,6 @@ export const Navigation: React.FC<NavigationProps> = ({
     {
       id: 'erp' as ActiveTab,
       label: 'ERP & Finance',
-      sublabel: 'Invoices & Inventory',
       icon: Building2,
       enabled: features.erp_enabled,
       requiredTier: 'Enterprise',
@@ -54,23 +50,21 @@ export const Navigation: React.FC<NavigationProps> = ({
     {
       id: 'audit' as ActiveTab,
       label: 'Audit & Policy',
-      sublabel: 'Immutable Ledger',
       icon: ScrollText,
       enabled: true,
     },
     {
       id: 'integrations' as ActiveTab,
-      label: 'Integrations Vault',
-      sublabel: 'Provider API Status',
+      label: 'Provider Vault',
       icon: KeyRound,
       enabled: true,
     },
   ];
 
   return (
-    <nav className="bg-slate-900 text-slate-300 border-b border-slate-800">
+    <nav className="bg-[#15120F] text-[#F3E9D2] border-b border-[#3A2F22] font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex space-x-1 sm:space-x-2 overflow-x-auto py-2.5 no-scrollbar">
+        <div className="flex space-x-1 sm:space-x-2 overflow-x-auto py-2 no-scrollbar">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -81,31 +75,27 @@ export const Navigation: React.FC<NavigationProps> = ({
                 key={tab.id}
                 onClick={() => onSelectTab(tab.id)}
                 id={`nav-${tab.id}`}
-                className={`flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs transition-all whitespace-nowrap border ${
                   isActive
-                    ? 'bg-indigo-600 text-white shadow-sm ring-1 ring-indigo-400'
+                    ? 'bg-[#1D1814] text-[#FFB000] border-[#FFB000] shadow-[0_0_12px_rgba(255,176,0,0.15)] font-semibold'
                     : isLocked
-                    ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 opacity-75'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                    ? 'text-[#F3E9D2]/40 hover:text-[#F3E9D2]/60 hover:bg-[#1D1814]/50 border-transparent'
+                    : 'text-[#F3E9D2]/75 hover:text-[#F3E9D2] hover:bg-[#1D1814] border-transparent'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : isLocked ? 'text-slate-400' : 'text-slate-400'}`} />
-                <div className="text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span>{tab.label}</span>
-                    {isLocked && (
-                      <span className="flex items-center gap-0.5 text-[10px] font-mono uppercase bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">
-                        <Lock className="w-2.5 h-2.5" />
-                        {tab.requiredTier}
-                      </span>
-                    )}
-                    {tab.badge && (
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${tab.badgeColor}`}>
-                        {tab.badge}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#FFB000]' : isLocked ? 'text-[#F3E9D2]/30' : 'text-[#B8850A]'}`} />
+                <span className="font-sans text-xs">{tab.label}</span>
+                {isLocked && (
+                  <span className="flex items-center gap-0.5 text-[10px] font-mono uppercase bg-[#1D1814] text-[#B8850A] px-1 py-0.2 rounded border border-[#3A2F22]">
+                    <Lock className="w-2.5 h-2.5" />
+                    {tab.requiredTier}
+                  </span>
+                )}
+                {tab.badge && (
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${tab.badgeColor}`}>
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             );
           })}

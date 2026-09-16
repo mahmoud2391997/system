@@ -31,6 +31,18 @@ export function verifyToken(token: string): AuthSession | null {
   }
 }
 
+export function signOAuthState(payload: { workspaceId: string; userId: string; returnTo?: string }): string {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+}
+
+export function verifyOAuthState(stateToken: string): { workspaceId: string; userId: string; returnTo?: string } | null {
+  try {
+    return jwt.verify(stateToken, JWT_SECRET) as { workspaceId: string; userId: string; returnTo?: string };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Extract token from Authorization header or Cookie
  */

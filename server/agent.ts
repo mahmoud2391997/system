@@ -276,20 +276,42 @@ Do NOT attempt to bypass permission policies. Always provide clear, objective op
       .update(JSON.stringify({ tool: proposedTool, params: toolParams, ws: context.workspace_id }))
       .digest('hex')
       .slice(0, 16);
-    const idempotencyKey = `idemp_${proposedTool}_${paramHash}_${Date.now()}`;
+    const idempotencyKey = `idemp_${proposedTool}_${paramHash}`;
 
-    // Check if duplicate execution exists
+    // Check if duplicate execution or pending approval exists
     const existingExecution = await db.toolExecutions.findByIdempotencyKey(context.workspace_id, idempotencyKey);
-    if (existingExecution && existingExecution.status === 'executed') {
-      reasoningSteps.push(`Idempotency check: duplicate action detected (${idempotencyKey}). Returning cached result.`);
-      const cachedMsg: AgentMessage = {
-        id: `msg_cached_${Date.now()}`,
-        sender: 'assistant',
-        text: `**Idempotency Cache Hit**\n\nThis action was already executed with key \`${idempotencyKey}\`.\nCached Result:\n\`\`\`json\n${JSON.stringify(existingExecution.result, null, 2)}\n\`\`\``,
-        timestamp: new Date().toISOString(),
-        reasoning_trace: reasoningSteps,
-      };
-      return { message: cachedMsg };
+    if (existingExecution) {
+      if (existingExecution.status === 'executed') {
+        reasoningSteps.push(`Idempotency check: duplicate action detected (${idempotencyKey}). Returning cached result.`);
+        const cachedMsg: AgentMessage = {
+          id: `msg_cached_${Date.now()}`,
+          sender: 'assistant',
+          text: `**Idempotency Cache Hit**\n\nThis action was already executed with key \`${idempotencyKey}\`.\n\nCached Result:\n\`\`\`json\n${JSON.stringify(existingExecution.result || { status: 'already_executed' }, null, 2)}\n\`\`\``,
+          timestamp: new Date().toISOString(),
+          reasoning_trace: reasoningSteps,
+        };
+        await db.messages.create(context.workspace_id, cachedMsg, context.user_id);
+        return { message: cachedMsg };
+      }
+
+      if (existingExecution.status === 'halted_awaiting_approval') {
+        const pendingList = await db.approvals.listByWorkspace(context.workspace_id);
+        const existingApproval = pendingList.find(
+          (a) => a.idempotency_key === idempotencyKey && a.status === 'pending'
+        );
+        if (existingApproval) {
+          reasoningSteps.push(`Idempotency check: duplicate proposal already pending approval (${idempotencyKey}).`);
+          const dupMsg: AgentMessage = {
+            id: `msg_pending_dup_${Date.now()}`,
+            sender: 'assistant',
+            text: `⚠️ **Action Already Queued for Approval**\n\nAn identical action with idempotency key \`${idempotencyKey}\` is already pending in your Approvals queue.\n\nPlease review and approve/reject the existing card above rather than queueing duplicates.`,
+            timestamp: new Date().toISOString(),
+            reasoning_trace: reasoningSteps,
+          };
+          await db.messages.create(context.workspace_id, dupMsg, context.user_id);
+          return { message: dupMsg, pendingApproval: existingApproval };
+        }
+      }
     }
 
     // 3. Strict Server-Side Policy Evaluation
