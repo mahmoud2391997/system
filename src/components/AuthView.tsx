@@ -53,21 +53,21 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#15120F] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans selection:bg-[#5C4620] selection:text-[#FFB000]">
+    <div className="min-h-screen bg-[#F8F7F3] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans selection:bg-[#5C4620] selection:text-[#171717]">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="mx-auto h-12 w-12 rounded bg-[#1D1814] border border-[#3A2F22] flex items-center justify-center text-[#FFB000]">
-          <span className="font-mono text-xl font-bold tracking-tighter">❯_</span>
+        <div className="mx-auto h-12 w-12 rounded bg-[#FFFFFF] border border-[#E5E5E5] flex items-center justify-center text-[#171717]">
+          <span className="font-mono text-2xl font-black tracking-tighter">N</span>
         </div>
-        <h2 className="mt-4 text-xl font-bold tracking-tight text-[#F3E9D2]">
-          Nexus AI Operations
+        <h2 className="mt-4 text-xl font-bold tracking-tight text-[#20232D]">
+          Nexus Operations
         </h2>
-        <p className="mt-1 text-xs text-[#B8850A] font-mono">
+        <p className="mt-1 text-xs text-[#737373] font-mono">
           nexus-auth — /core/tenant-gate
         </p>
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-[#1D1814] py-6 px-6 border border-[#3A2F22] rounded-lg shadow-2xl sm:px-8 space-y-5">
+        <div className="bg-[#FFFFFF] py-6 px-6 border border-[#E5E5E5] rounded-lg shadow-2xl sm:px-8 space-y-5">
           {error && (
             <div className="p-3 bg-[#4A2622] border border-[#E2574C]/60 rounded text-xs text-[#E2574C] flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 text-[#E2574C]" />
@@ -76,17 +76,17 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
           )}
 
           {/* Quick Demo Access */}
-          <div className="bg-[#15120F] border border-[#3A2F22] rounded-lg p-3.5 text-xs space-y-2.5">
+          <div className="bg-[#F8F7F3] border border-[#E5E5E5] rounded-lg p-3.5 text-xs space-y-2.5">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[#FFB000] font-bold">nexus❯ eval --demo</span>
+              <span className="font-mono text-[#171717] font-bold">nexus❯ eval --demo</span>
             </div>
-            <p className="text-[#F3E9D2]/70 leading-relaxed font-sans text-xs">
+            <p className="text-[#20232D]/70 leading-relaxed font-sans text-xs">
               Authenticate immediately as <strong>Sarah Chen</strong> (Owner, Personal Tier). Loads active Gmail/Calendar integration and CRM records.
             </p>
             <button
               onClick={handleDemoLogin}
               disabled={loading}
-              className="w-full py-2 px-3 bg-[#FFB000] hover:bg-[#FFB000]/90 text-[#15120F] font-mono font-bold rounded text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2 px-3 bg-[#171717] hover:bg-[#171717]/90 text-[#F8F7F3] font-mono font-bold rounded text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>LOGIN AS SARAH CHEN (DEMO)</span>
@@ -95,10 +95,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#3A2F22]" />
+              <div className="w-full border-t border-[#E5E5E5]" />
             </div>
             <div className="relative flex justify-center text-[10px] uppercase">
-              <span className="bg-[#1D1814] px-2 text-[#B8850A] font-mono">Or authentic credentials</span>
+              <span className="bg-[#FFFFFF] px-2 text-[#737373] font-mono">Or authentic credentials</span>
             </div>
           </div>
 
@@ -106,46 +106,46 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-3.5 text-xs font-sans">
             {mode === 'register' && (
               <div>
-                <label className="block font-medium text-[#F3E9D2]/80 mb-1">Full Name</label>
+                <label className="block font-medium text-[#20232D]/80 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Alex Mercer"
-                  className="w-full px-3 py-2 border border-[#3A2F22] rounded bg-[#15120F] text-[#F3E9D2] focus:outline-none focus:border-[#FFB000]"
+                  className="w-full px-3 py-2 border border-[#E5E5E5] rounded bg-[#F8F7F3] text-[#20232D] focus:outline-none focus:border-[#171717]"
                 />
               </div>
             )}
 
             <div>
-              <label className="block font-medium text-[#F3E9D2]/80 mb-1">Email Address</label>
+              <label className="block font-medium text-[#20232D]/80 mb-1">Email Address</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="operator@company.com"
-                className="w-full px-3 py-2 border border-[#3A2F22] rounded bg-[#15120F] text-[#F3E9D2] focus:outline-none focus:border-[#FFB000]"
+                className="w-full px-3 py-2 border border-[#E5E5E5] rounded bg-[#F8F7F3] text-[#20232D] focus:outline-none focus:border-[#171717]"
               />
             </div>
 
             <div>
-              <label className="block font-medium text-[#F3E9D2]/80 mb-1">Password</label>
+              <label className="block font-medium text-[#20232D]/80 mb-1">Password</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3 py-2 border border-[#3A2F22] rounded bg-[#15120F] text-[#F3E9D2] focus:outline-none focus:border-[#FFB000]"
+                className="w-full px-3 py-2 border border-[#E5E5E5] rounded bg-[#F8F7F3] text-[#20232D] focus:outline-none focus:border-[#171717]"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-3 bg-[#15120F] hover:bg-[#3A2F22] text-[#FFB000] border border-[#3A2F22] font-mono text-xs font-semibold rounded transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2 px-3 bg-[#F8F7F3] hover:bg-[#E5E5E5] text-[#171717] border border-[#E5E5E5] font-mono text-xs font-semibold rounded transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {mode === 'register' ? (
                 <>
@@ -164,21 +164,21 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
           {/* Toggle */}
           <div className="text-center pt-1 text-xs font-sans">
             {mode === 'login' ? (
-              <p className="text-[#F3E9D2]/60">
+              <p className="text-[#20232D]/60">
                 Need a new workspace?{' '}
                 <button
                   onClick={() => { setMode('register'); setError(null); }}
-                  className="text-[#FFB000] hover:underline font-medium ml-1"
+                  className="text-[#171717] hover:underline font-medium ml-1"
                 >
                   Register here
                 </button>
               </p>
             ) : (
-              <p className="text-[#F3E9D2]/60">
+              <p className="text-[#20232D]/60">
                 Already registered?{' '}
                 <button
                   onClick={() => { setMode('login'); setError(null); }}
-                  className="text-[#FFB000] hover:underline font-medium ml-1"
+                  className="text-[#171717] hover:underline font-medium ml-1"
                 >
                   Sign in
                 </button>
@@ -188,9 +188,9 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
         </div>
 
         {/* Security Footnote */}
-        <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-[#B8850A] font-mono">
+        <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-[#737373] font-mono">
           <span className="flex items-center gap-1">
-            <Lock className="w-3 h-3 text-[#B8850A]" />
+            <Lock className="w-3 h-3 text-[#737373]" />
             sha-256 + pbkdf2
           </span>
           <span>•</span>

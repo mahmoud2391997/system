@@ -62,7 +62,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   ];
 
   return (
-    <nav className="bg-[#15120F] text-[#F3E9D2] border-b border-[#3A2F22] font-sans">
+    <nav className="bg-[#20232D] text-[#FFFFFF] border-b border-[#E5E5E5] font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex space-x-1 sm:space-x-2 overflow-x-auto py-2 no-scrollbar">
           {tabs.map((tab) => {
@@ -77,16 +77,16 @@ export const Navigation: React.FC<NavigationProps> = ({
                 id={`nav-${tab.id}`}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs transition-all whitespace-nowrap border ${
                   isActive
-                    ? 'bg-[#1D1814] text-[#FFB000] border-[#FFB000] shadow-[0_0_12px_rgba(255,176,0,0.15)] font-semibold'
+                    ? 'bg-[#1D1814] text-[#171717] border-[#171717] shadow-[0_0_12px_rgba(255,176,0,0.15)] font-semibold'
                     : isLocked
-                    ? 'text-[#F3E9D2]/40 hover:text-[#F3E9D2]/60 hover:bg-[#1D1814]/50 border-transparent'
-                    : 'text-[#F3E9D2]/75 hover:text-[#F3E9D2] hover:bg-[#1D1814] border-transparent'
+                    ? 'text-[#FFFFFF]/40 hover:text-[#FFFFFF]/60 hover:bg-[#1D1814]/50 border-transparent'
+                    : 'text-[#FFFFFF]/75 hover:text-[#FFFFFF] hover:bg-[#1D1814] border-transparent'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#FFB000]' : isLocked ? 'text-[#F3E9D2]/30' : 'text-[#B8850A]'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#171717]' : isLocked ? 'text-[#FFFFFF]/30' : 'text-[#737373]'}`} />
                 <span className="font-sans text-xs">{tab.label}</span>
                 {isLocked && (
-                  <span className="flex items-center gap-0.5 text-[10px] font-mono uppercase bg-[#1D1814] text-[#B8850A] px-1 py-0.2 rounded border border-[#3A2F22]">
+                  <span className="flex items-center gap-0.5 text-[10px] font-mono uppercase bg-[#1D1814] text-[#737373] px-1 py-0.2 rounded border border-[#E5E5E5]">
                     <Lock className="w-2.5 h-2.5" />
                     {tab.requiredTier}
                   </span>
