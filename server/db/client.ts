@@ -64,8 +64,11 @@ interface DatabaseSchema {
   audit_logs: AuditLogEntry[];
 }
 
-// In-file persistent store path for local dev without Postgres
-const DATA_DIR = path.join(process.cwd(), '.data');
+// Persistent store: local `.data` in development, `/tmp` on Vercel (writable).
+const IS_SERVERLESS = Boolean(process.env.VERCEL);
+const DATA_DIR = IS_SERVERLESS
+  ? path.join('/tmp', 'nexus-data')
+  : path.join(process.cwd(), '.data');
 const DATA_FILE = path.join(DATA_DIR, 'nexus_db.json');
 
 let pool: pg.Pool | null = null;
@@ -73,8 +76,12 @@ let fileDb: DatabaseSchema | null = null;
 let lastLoadedMtime = 0;
 
 function getFileDb(): DatabaseSchema {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch {
+    /* in-memory fallback */
   }
 
   if (fs.existsSync(DATA_FILE)) {
@@ -122,9 +129,12 @@ function saveFileDb() {
       lastLoadedMtime = fs.statSync(DATA_FILE).mtimeMs;
     }
   } catch (err) {
-    console.error('Failed to save to local persistence file:', err);
+    // Serverless filesystems can reject writes; keep the in-memory copy.
+    console.warn('[DB] Persistence write skipped:', err instanceof Error ? err.message : err);
   }
 }
+
+let initPromise: Promise<void> | null = null;
 
 function getPgPool(): pg.Pool | null {
   if (pool) return pool;
@@ -144,22 +154,33 @@ function getPgPool(): pg.Pool | null {
 
 export const db = {
   async init() {
-    const pgPool = getPgPool();
-    if (pgPool) {
-      try {
-        const schemaPath = path.join(process.cwd(), 'server', 'db', 'schema.sql');
-        if (fs.existsSync(schemaPath)) {
-          const sql = fs.readFileSync(schemaPath, 'utf8');
-          await pgPool.query(sql);
-          console.log('[DB] PostgreSQL tables successfully initialized.');
+    if (initPromise) return initPromise;
+    initPromise = (async () => {
+      const pgPool = getPgPool();
+      if (pgPool) {
+        try {
+          const schemaPath = path.join(process.cwd(), 'server', 'db', 'schema.sql');
+          if (fs.existsSync(schemaPath)) {
+            const sql = fs.readFileSync(schemaPath, 'utf8');
+            await pgPool.query(sql);
+            console.log('[DB] PostgreSQL tables successfully initialized.');
+          }
+        } catch (err: any) {
+          console.warn('[DB] PostgreSQL init warning:', err.message);
         }
-      } catch (err: any) {
-        console.warn('[DB] PostgreSQL init warning:', err.message);
+        return;
       }
-    } else {
       getFileDb();
-      console.log('[DB] Local persistent file-backed database initialized (.data/nexus_db.json).');
-    }
+      console.log(
+        IS_SERVERLESS
+          ? '[DB] Serverless in-memory/tmp store initialized.'
+          : '[DB] Local persistent file-backed database initialized (.data/nexus_db.json).'
+      );
+    })().catch((err) => {
+      initPromise = null;
+      throw err;
+    });
+    return initPromise;
   },
 
   // USERS

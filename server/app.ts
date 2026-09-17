@@ -155,24 +155,39 @@ const previewInventory: InventoryItem[] = [
   },
 ];
 
+function sessionCookieOptions() {
+  const isProd = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProd,
+    maxAge: 7 * 86400000,
+    sameSite: 'lax' as const,
+    path: '/',
+  };
+}
+
 export function createExpressApp(): express.Express {
   const app = express();
+  app.set('trust proxy', 1);
   app.use(express.json());
   app.use(cookieParser());
 
-  // Initialize DB and dev seed asynchronously
-  db.init().then(() => seedInitialData()).catch((err) => {
+  const ready = db.init().then(() => seedInitialData()).catch((err) => {
     console.error('Failed to initialize database or seed:', err);
   });
 
   const apiRouter = express.Router();
+  apiRouter.use(async (_req, _res, next) => {
+    await ready;
+    next();
+  });
 
   // 1. Health check
   apiRouter.get('/health', async (req, res) => {
     res.json({
       status: 'ok',
       version: '1.4.0',
-      database: process.env.DATABASE_URL ? 'postgresql' : 'file_persistence',
+      database: process.env.DATABASE_URL ? 'postgresql' : process.env.VERCEL ? 'serverless_memory' : 'file_persistence',
       timestamp: new Date().toISOString(),
     });
   });
@@ -186,12 +201,7 @@ export function createExpressApp(): express.Express {
 
     try {
       const result = await registerUser(email, password, name);
-      res.cookie('nexus_session', result.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 7 * 86400000,
-        sameSite: 'lax',
-      });
+      res.cookie('nexus_session', result.token, sessionCookieOptions());
 
       res.json({
         success: true,
@@ -229,12 +239,7 @@ export function createExpressApp(): express.Express {
       workspaceId: workspace.id,
     });
 
-    res.cookie('nexus_session', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 86400000,
-      sameSite: 'lax',
-    });
+    res.cookie('nexus_session', token, sessionCookieOptions());
 
     res.json({
       success: true,
@@ -273,12 +278,7 @@ export function createExpressApp(): express.Express {
       workspaceId: workspace.id,
     });
 
-    res.cookie('nexus_session', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 86400000,
-      sameSite: 'lax',
-    });
+    res.cookie('nexus_session', token, sessionCookieOptions());
 
     res.json({
       success: true,
@@ -300,22 +300,22 @@ export function createExpressApp(): express.Express {
   apiRouter.get('/auth/me', async (req, res) => {
     const token = extractToken(req);
     if (!token) {
-      return res.status(401).json({ authenticated: false });
+      return res.status(200).json({ authenticated: false });
     }
 
     const session = verifyToken(token);
     if (!session) {
-      return res.status(401).json({ authenticated: false });
+      return res.status(200).json({ authenticated: false });
     }
 
     const user = await db.users.findById(session.userId);
     if (!user) {
-      return res.status(401).json({ authenticated: false });
+      return res.status(200).json({ authenticated: false });
     }
 
     const workspace = await db.workspaces.findById(session.workspaceId);
     if (!workspace) {
-      return res.status(401).json({ authenticated: false });
+      return res.status(200).json({ authenticated: false });
     }
 
     const member = await db.members.findByUser(workspace.id, user.id);
@@ -337,7 +337,7 @@ export function createExpressApp(): express.Express {
   });
 
   apiRouter.post('/auth/logout', (req, res) => {
-    res.clearCookie('nexus_session');
+    res.clearCookie('nexus_session', { path: '/' });
     res.json({ success: true, message: 'Logged out successfully.' });
   });
 

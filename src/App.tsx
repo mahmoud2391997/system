@@ -109,6 +109,12 @@ export default function App() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const token = localStorage.getItem('nexus_token');
+      if (!token) {
+        setCurrentUser(null);
+        setIsInitialLoading(false);
+        return;
+      }
       try {
         const res = await fetchWithAuth('/api/auth/me');
         if (res.ok) {
@@ -120,6 +126,7 @@ export default function App() {
             return;
           }
         }
+        localStorage.removeItem('nexus_token');
       } catch (err) {
         console.error('Auth verification error:', err);
       }
