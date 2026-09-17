@@ -72,31 +72,33 @@ export const TeamView: React.FC<TeamViewProps> = ({
 
   if (!features.team_enabled) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-5 text-slate-400">
-          <Lock className="w-8 h-8 text-slate-500" />
-        </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">Team & Project Management is Locked</h2>
-        <p className="text-slate-600 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
-          You are currently on the <strong>{features.tier.toUpperCase()}</strong> tier. Upgrades happen
-          in-place: no second account, no database migration, no lost history.
-        </p>
-        <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl max-w-md mx-auto mb-6 text-left text-xs text-purple-900 space-y-2">
-          <div className="font-semibold flex items-center gap-1.5 text-purple-950">
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            What Team Tier Unlocks (Section 5 & 11):
+      <div className="max-w-xl mx-auto px-4 py-16">
+        <div className="bg-ink-900 border border-ink-border p-8 text-center">
+          <div className="w-12 h-12 rounded-lg border border-rule bg-paper-inset flex items-center justify-center mx-auto mb-5">
+            <Lock className="w-5 h-5 text-amber" />
           </div>
-          <p>• Multi-user workspace with 10–50 seats</p>
-          <p>• Role-based permissions: Admin, Manager, Member</p>
-          <p>• Project boards, task assignments, and time tracking</p>
-          <p>• Delegated automation and shared activity visibility</p>
+          <h2 className="text-xl font-semibold text-paper tracking-tight mb-2">Team & Project Management is Locked</h2>
+          <p className="text-paper/70 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
+            You are currently on the <strong className="text-paper">{features.tier.toUpperCase()}</strong> tier. Upgrades happen
+            in-place: no second account, no database migration, no lost history.
+          </p>
+          <div className="p-4 bg-ink-800 border border-ink-border text-left text-sm text-paper/80 space-y-2 mb-6">
+            <div className="font-semibold flex items-center gap-1.5 text-amber">
+              <Sparkles className="w-4 h-4 text-amber" />
+              What Team Tier Unlocks (Section 5 & 11):
+            </div>
+            <p>• Multi-user workspace with 10–50 seats</p>
+            <p>• Role-based permissions: Admin, Manager, Member</p>
+            <p>• Project boards, task assignments, and time tracking</p>
+            <p>• Delegated automation and shared activity visibility</p>
+          </div>
+          <button
+            onClick={() => onUpgradeInPlace('team')}
+            className="px-5 py-2.5 bg-amber hover:opacity-90 text-ink-950 text-sm font-semibold transition-colors"
+          >
+            Upgrade in-place to Team Tier
+          </button>
         </div>
-        <button
-          onClick={() => onUpgradeInPlace('team')}
-          className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
-        >
-          Upgrade in-place to Team Tier
-        </button>
       </div>
     );
   }
@@ -139,17 +141,17 @@ export const TeamView: React.FC<TeamViewProps> = ({
   };
 
   const statusColumns: { id: ProjectTask['status']; label: string; accent: string }[] = [
-    { id: 'todo', label: 'To Do', accent: 'border-t-slate-400' },
-    { id: 'in_progress', label: 'In Progress', accent: 'border-t-blue-500' },
-    { id: 'review', label: 'Under Review', accent: 'border-t-purple-500' },
-    { id: 'done', label: 'Completed', accent: 'border-t-emerald-500' },
+    { id: 'todo', label: 'To Do', accent: 'border-t-ink-muted' },
+    { id: 'in_progress', label: 'In Progress', accent: 'border-t-amber' },
+    { id: 'review', label: 'Under Review', accent: 'border-t-warn' },
+    { id: 'done', label: 'Completed', accent: 'border-t-ok' },
   ];
 
   const priorityColors: Record<ProjectTask['priority'], string> = {
-    low: 'bg-slate-100 text-slate-700 border-slate-200',
-    medium: 'bg-blue-50 text-blue-800 border-blue-200',
-    high: 'bg-amber-50 text-amber-800 border-amber-200',
-    critical: 'bg-red-50 text-red-800 border-red-200 font-bold',
+    low: 'bg-paper-inset text-ink-muted border-rule',
+    medium: 'bg-warn-bg text-ink-text border-amber/30',
+    high: 'bg-warn-bg text-ink-muted border-amber/40',
+    critical: 'bg-danger-bg text-danger border-danger/40 font-bold',
   };
 
   // Metrics
@@ -174,48 +176,50 @@ export const TeamView: React.FC<TeamViewProps> = ({
     return true;
   });
 
+  const fieldClass = 'w-full px-3 py-2 border border-rule bg-paper-raised text-ink-text text-sm placeholder:text-ink-muted/70 focus:outline-none focus:border-amber';
+  const overlayClass = 'fixed inset-0 z-50 bg-ink-950/80 flex items-center justify-center p-4';
+  const modalClass = 'bg-paper-raised max-w-md w-full p-6 border border-rule';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Honest Preview Disclaimer Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
-        <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+      <div className="bg-warn-bg border border-amber/30 p-3.5 flex items-start gap-3 text-sm text-ink-text">
+        <Sparkles className="w-4 h-4 text-ink-muted shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold block text-amber-950">Tier Preview — Phase 5 Team Engine</span>
-          <p className="text-amber-800 mt-0.5">
-            This screen illustrates collaborative sprint boards and multi-seat permissions for the Team tier. Tasks shown here are preview records.
+          <span className="font-semibold block text-ink-text">Team is the system of execution</span>
+          <p className="text-ink-muted mt-0.5">
+            Sprint boards, seat permissions, and task assignment. Work stays in one workspace when the tier changes.
           </p>
         </div>
       </div>
 
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-paper-raised p-5 border border-rule">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-ink-muted bg-warn-bg px-2 py-0.5 border border-amber/30">
               Team Tier Module Unlocked
             </span>
-            <span className="text-xs text-slate-600">• System of Execution: Multi-Seat Coordination</span>
+            <span className="text-sm text-ink-muted">• System of Execution: Multi-Seat Coordination</span>
           </div>
-          <h1 className="text-lg font-bold text-slate-900 mt-1">Projects & Team Coordination</h1>
-          <p className="text-xs text-slate-600">
+          <h1 className="text-xl font-semibold text-ink-text mt-1 tracking-tight">Projects & Team Coordination</h1>
+          <p className="text-sm text-ink-muted">
             RBAC delegation, project sprints, task allocation, and active seat management.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50 text-xs">
+          <div className="inline-flex border border-rule p-1 bg-paper-inset text-sm">
             <button
               onClick={() => setActiveTab('board')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                activeTab === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1.5 font-medium transition-colors ${
+                activeTab === 'board' ? 'bg-amber text-ink-950' : 'text-ink-muted hover:text-ink-text'
               }`}
             >
               Task Board ({tasks.length})
             </button>
             <button
               onClick={() => setActiveTab('members')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                activeTab === 'members' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1.5 font-medium transition-colors ${
+                activeTab === 'members' ? 'bg-amber text-ink-950' : 'text-ink-muted hover:text-ink-text'
               }`}
             >
               Roster & Seats ({members.length}/{features.max_seats})
@@ -224,14 +228,14 @@ export const TeamView: React.FC<TeamViewProps> = ({
 
           <button
             onClick={() => setShowNewTaskModal(true)}
-            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors"
+            className="px-3 py-1.5 bg-amber hover:opacity-90 text-ink-950 text-sm font-semibold flex items-center gap-1 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Create Task</span>
           </button>
           <button
             onClick={() => setShowInviteModal(true)}
-            className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+            className="px-3 py-1.5 bg-paper hover:bg-paper-inset text-ink-text border border-rule text-sm font-medium flex items-center gap-1 transition-colors"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Invite Member</span>
@@ -239,68 +243,66 @@ export const TeamView: React.FC<TeamViewProps> = ({
         </div>
       </div>
 
-      {/* KPI Workload Metrics Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <CheckSquare className="w-3.5 h-3.5 text-purple-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <CheckSquare className="w-3.5 h-3.5 text-ok" />
             Completion Rate
           </div>
-          <div className="text-xl font-bold text-purple-600 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             {completionRate}%
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">{completedTasks} of {totalTasks} tasks finished</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">{completedTasks} of {totalTasks} tasks finished</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-blue-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5 text-ink-muted" />
             Active Sprints
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             {inProgressTasks}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Tasks currently in execution</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">Tasks currently in execution</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-ok" />
             Hours Logged
           </div>
-          <div className="text-xl font-bold text-emerald-600 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             {totalHours} hrs
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Billable & internal execution</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">Billable & internal execution</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5 text-indigo-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-ink-muted" />
             Active Team Seats
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             {members.length} / {features.max_seats}
           </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
+          <div className="w-full bg-paper-inset h-1.5 overflow-hidden mt-1.5">
             <div
-              className="bg-indigo-600 h-full rounded-full"
+              className="quota-fill bg-amber h-full"
               style={{ width: `${Math.min(100, (members.length / features.max_seats) * 100)}%` }}
             />
           </div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-wrap items-center gap-3 bg-paper-raised p-3 border border-rule">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-ink-muted absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search tasks, descriptions, or assignees..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-rule bg-paper-raised text-ink-text placeholder:text-ink-muted/70 focus:outline-none focus:border-amber"
           />
         </div>
 
@@ -309,7 +311,7 @@ export const TeamView: React.FC<TeamViewProps> = ({
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as any)}
-              className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 bg-white"
+              className="text-sm border border-rule px-2.5 py-2 text-ink-text bg-paper-raised"
             >
               <option value="all">All Priorities</option>
               <option value="critical">Critical</option>
@@ -321,7 +323,7 @@ export const TeamView: React.FC<TeamViewProps> = ({
             <select
               value={assigneeFilter}
               onChange={(e) => setAssigneeFilter(e.target.value)}
-              className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 bg-white"
+              className="text-sm border border-rule px-2.5 py-2 text-ink-text bg-paper-raised"
             >
               <option value="all">All Assignees</option>
               {members.map((m) => (
@@ -335,7 +337,6 @@ export const TeamView: React.FC<TeamViewProps> = ({
       </div>
 
       {activeTab === 'board' ? (
-        /* Task Kanban Columns */
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {statusColumns.map((col) => {
             const colTasks = filteredTasks.filter((t) => t.status === col.id);
@@ -343,11 +344,11 @@ export const TeamView: React.FC<TeamViewProps> = ({
             return (
               <div
                 key={col.id}
-                className={`bg-slate-50/70 rounded-xl border border-slate-200 p-3 flex flex-col border-t-4 ${col.accent}`}
+                className={`bg-paper-inset border border-rule p-3 flex flex-col border-t-[3px] ${col.accent}`}
               >
-                <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200">
-                  <span className="text-xs font-bold text-slate-800">{col.label}</span>
-                  <span className="text-[11px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-rule">
+                  <span className="text-sm font-semibold text-ink-text">{col.label}</span>
+                  <span className="text-[11px] font-mono text-ink-muted bg-paper-raised px-1.5 py-0.5 border border-rule">
                     {colTasks.length}
                   </span>
                 </div>
@@ -362,11 +363,11 @@ export const TeamView: React.FC<TeamViewProps> = ({
                     return (
                       <div
                         key={task.id}
-                        className="bg-white rounded-lg border border-slate-200 p-3 shadow-xs hover:shadow-sm transition-shadow text-left"
+                        className="bg-paper-raised border border-rule p-3 hover:border-amber/40 transition-colors text-left"
                       >
                         <div className="flex items-start justify-between gap-1 mb-1">
                           <span
-                            className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded border ${
+                            className={`text-[10px] font-mono uppercase px-1.5 py-0.5 border ${
                               priorityColors[task.priority]
                             }`}
                           >
@@ -375,7 +376,7 @@ export const TeamView: React.FC<TeamViewProps> = ({
                           {onDeleteTask && (
                             <button
                               onClick={() => onDeleteTask(task.id)}
-                              className="text-slate-300 hover:text-red-600 transition-colors p-0.5"
+                              className="text-ink-muted hover:text-danger transition-colors p-0.5"
                               title="Delete task"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -383,43 +384,41 @@ export const TeamView: React.FC<TeamViewProps> = ({
                           )}
                         </div>
 
-                        <h4 className="text-xs font-semibold text-slate-900 leading-snug mb-1">
+                        <h4 className="text-sm font-semibold text-ink-text leading-snug mb-1">
                           {task.title}
                         </h4>
 
                         {task.description && (
-                          <p className="text-[11px] text-slate-500 line-clamp-2 mb-2 leading-tight">
+                          <p className="text-[13px] text-ink-muted line-clamp-2 mb-2 leading-tight">
                             {task.description}
                           </p>
                         )}
 
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                          <span className="flex items-center gap-1 font-medium text-slate-700">
-                            <UserCheck className="w-3 h-3 text-slate-400" />
+                        <div className="flex items-center justify-between pt-2 border-t border-rule text-[13px] text-ink-muted">
+                          <span className="flex items-center gap-1 font-medium text-ink-text">
+                            <UserCheck className="w-3 h-3 text-ink-muted" />
                             {task.assignee_name}
                           </span>
-                          <span className="flex items-center gap-1 font-mono text-slate-600">
-                            <Clock className="w-3 h-3 text-slate-400" />
+                          <span className="flex items-center gap-1 font-mono text-ink-muted">
+                            <Clock className="w-3 h-3" />
                             {task.time_spent_hours}h
                           </span>
                         </div>
 
-                        {/* Interactive Task Actions: Time Logging & Column Move */}
-                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
-                          {/* Quick Time Tracker */}
+                        <div className="mt-2.5 pt-2 border-t border-rule flex items-center justify-between gap-1">
                           <div className="flex items-center gap-1">
                             {onAddTimeSpent && (
                               <>
                                 <button
                                   onClick={() => onAddTimeSpent(task.id, 1)}
-                                  className="text-[10px] text-slate-600 hover:text-purple-700 font-mono px-1.5 py-0.5 rounded border border-slate-200 hover:bg-purple-50 transition-colors"
+                                  className="text-[11px] text-ink-muted hover:text-ink-text font-mono px-1.5 py-0.5 border border-rule hover:bg-warn-bg transition-colors"
                                   title="Add 1 hour logged"
                                 >
                                   +1h
                                 </button>
                                 <button
                                   onClick={() => onAddTimeSpent(task.id, 2)}
-                                  className="text-[10px] text-slate-600 hover:text-purple-700 font-mono px-1.5 py-0.5 rounded border border-slate-200 hover:bg-purple-50 transition-colors"
+                                  className="text-[11px] text-ink-muted hover:text-ink-text font-mono px-1.5 py-0.5 border border-rule hover:bg-warn-bg transition-colors"
                                   title="Add 2 hours logged"
                                 >
                                   +2h
@@ -428,12 +427,11 @@ export const TeamView: React.FC<TeamViewProps> = ({
                             )}
                           </div>
 
-                          {/* Column status jump */}
                           <div className="flex items-center gap-1">
                             {prevStatus && onUpdateTaskStatus && (
                               <button
                                 onClick={() => onUpdateTaskStatus(task.id, prevStatus)}
-                                className="text-[10px] text-slate-400 hover:text-slate-700 p-1 rounded hover:bg-slate-100"
+                                className="text-[11px] text-ink-muted hover:text-ink-text p-1 hover:bg-paper-inset"
                                 title={`Move back to ${prevStatus}`}
                               >
                                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -442,7 +440,7 @@ export const TeamView: React.FC<TeamViewProps> = ({
                             {nextStatus && onUpdateTaskStatus && (
                               <button
                                 onClick={() => onUpdateTaskStatus(task.id, nextStatus)}
-                                className="text-[10px] text-purple-700 hover:text-purple-900 font-medium flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-50 hover:bg-purple-100"
+                                className="text-[11px] text-ink-text font-medium flex items-center gap-0.5 px-1.5 py-0.5 bg-paper-inset hover:bg-amber hover:text-ink-950"
                               >
                                 Move <ChevronRight className="w-3 h-3" />
                               </button>
@@ -454,7 +452,7 @@ export const TeamView: React.FC<TeamViewProps> = ({
                   })}
 
                   {colTasks.length === 0 && (
-                    <div className="text-center py-8 text-[11px] text-slate-400 border border-dashed border-slate-200 rounded-lg">
+                    <div className="text-center py-8 text-[13px] text-ink-muted border border-dashed border-rule">
                       No tasks in {col.label}
                     </div>
                   )}
@@ -464,59 +462,58 @@ export const TeamView: React.FC<TeamViewProps> = ({
           })}
         </div>
       ) : (
-        /* Team Members & Roster Directory */
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div className="bg-paper-raised border border-rule p-5 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-rule">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Workspace Member Roster</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="text-lg font-semibold text-ink-text tracking-tight">Workspace Member Roster</h3>
+              <p className="text-sm text-ink-muted">
                 Seat limits and access scopes are bound to workspace tier configuration.
               </p>
             </div>
             <button
               onClick={() => setShowInviteModal(true)}
-              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5"
+              className="px-3 py-1.5 bg-amber hover:opacity-90 text-ink-950 text-sm font-semibold flex items-center gap-1.5"
             >
               <UserPlus className="w-3.5 h-3.5" />
               Invite Teammate
             </button>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-rule">
             {members.map((member) => (
               <div key={member.id} className="py-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-800 font-bold text-xs flex items-center justify-center border border-purple-200">
+                  <div className="w-9 h-9 bg-amber text-ink-950 font-bold text-xs flex items-center justify-center border border-ink-border font-mono">
                     {member.avatar || member.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                    <div className="text-sm font-semibold text-ink-text flex items-center gap-2">
                       {member.name}
                       {member.status === 'invited' && (
-                        <span className="text-[10px] font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                        <span className="text-[10px] font-mono text-ink-muted bg-warn-bg px-1.5 py-0.5 border border-amber/30">
                           Invite Pending
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-slate-500">{member.email}</div>
+                    <div className="text-[13px] text-ink-muted font-mono">{member.email}</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <span
-                    className={`text-[11px] font-mono uppercase px-2 py-0.5 rounded border font-semibold ${
+                    className={`text-[11px] font-mono uppercase px-2 py-0.5 border font-semibold ${
                       member.role === 'admin'
-                        ? 'bg-red-50 text-red-700 border-red-200'
+                        ? 'bg-danger-bg text-danger border-danger/40'
                         : member.role === 'manager'
-                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                        ? 'bg-warn-bg text-ink-muted border-amber/40'
+                        : 'bg-paper-inset text-ink-muted border-rule'
                     }`}
                   >
                     {member.role}
                   </span>
                   <button
                     onClick={() => onTriggerAction(`Audit task allocation and review recent activities for ${member.name}`)}
-                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1 rounded hover:bg-indigo-50"
+                    className="text-sm text-ink-muted hover:text-ink-text font-medium px-2 py-1 hover:bg-warn-bg"
                   >
                     Audit Workload
                   </button>
@@ -527,45 +524,44 @@ export const TeamView: React.FC<TeamViewProps> = ({
         </div>
       )}
 
-      {/* New Task Modal */}
       {showNewTaskModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-bold text-slate-900">Create New Project Task</h3>
-              <button onClick={() => setShowNewTaskModal(false)} className="text-slate-400 hover:text-slate-600">
+        <div className={overlayClass}>
+          <div className={modalClass}>
+            <div className="flex items-center justify-between pb-3 border-b border-rule mb-4">
+              <h3 className="text-lg font-semibold text-ink-text tracking-tight">Create New Project Task</h3>
+              <button onClick={() => setShowNewTaskModal(false)} className="text-ink-muted hover:text-ink-text">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <form onSubmit={handleCreate} className="space-y-3 text-xs">
+            <form onSubmit={handleCreate} className="space-y-3 text-sm">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Task Title *</label>
+                <label className="block font-medium text-ink-text mb-1">Task Title *</label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Implement ISO compliance residency check"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Description</label>
+                <label className="block font-medium text-ink-text mb-1">Description</label>
                 <textarea
                   rows={2}
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   placeholder="Details, acceptance criteria, or links..."
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Priority</label>
+                  <label className="block font-medium text-ink-text mb-1">Priority</label>
                   <select
                     value={newPriority}
                     onChange={(e) => setNewPriority(e.target.value as any)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -574,11 +570,11 @@ export const TeamView: React.FC<TeamViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Assignee</label>
+                  <label className="block font-medium text-ink-text mb-1">Assignee</label>
                   <select
                     value={newAssignee}
                     onChange={(e) => setNewAssignee(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   >
                     {members.map((m) => (
                       <option key={m.id} value={m.name}>
@@ -589,25 +585,25 @@ export const TeamView: React.FC<TeamViewProps> = ({
                 </div>
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Target Due Date</label>
+                <label className="block font-medium text-ink-text mb-1">Target Due Date</label>
                 <input
                   type="date"
                   value={newDueDate}
                   onChange={(e) => setNewDueDate(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-rule">
                 <button
                   type="button"
                   onClick={() => setShowNewTaskModal(false)}
-                  className="px-3 py-1.5 text-slate-600 hover:text-slate-800"
+                  className="px-3 py-1.5 text-ink-muted hover:text-ink-text"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-xs"
+                  className="px-4 py-1.5 bg-amber hover:opacity-90 text-ink-950 font-semibold"
                 >
                   Create Task
                 </button>
@@ -617,70 +613,69 @@ export const TeamView: React.FC<TeamViewProps> = ({
         </div>
       )}
 
-      {/* Invite Teammate Modal */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-bold text-slate-900">Invite Team Member</h3>
-              <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-slate-600">
+        <div className={overlayClass}>
+          <div className={modalClass}>
+            <div className="flex items-center justify-between pb-3 border-b border-rule mb-4">
+              <h3 className="text-lg font-semibold text-ink-text tracking-tight">Invite Team Member</h3>
+              <button onClick={() => setShowInviteModal(false)} className="text-ink-muted hover:text-ink-text">
                 <X className="w-4 h-4" />
               </button>
             </div>
             {inviteError && (
-              <div className="p-3 mb-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800">
+              <div className="p-3 mb-3 bg-danger-bg border border-danger/40 text-sm text-danger">
                 {inviteError}
               </div>
             )}
-            <form onSubmit={handleInvite} className="space-y-3 text-xs">
+            <form onSubmit={handleInvite} className="space-y-3 text-sm">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Full Name *</label>
+                <label className="block font-medium text-ink-text mb-1">Full Name *</label>
                 <input
                   type="text"
                   required
                   value={inviteName}
                   onChange={(e) => setInviteName(e.target.value)}
                   placeholder="e.g. Liam Vance"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Work Email Address *</label>
+                <label className="block font-medium text-ink-text mb-1">Work Email Address *</label>
                 <input
                   type="email"
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="liam@apexhorizon.io"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Workspace RBAC Role</label>
+                <label className="block font-medium text-ink-text mb-1">Workspace RBAC Role</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as any)}
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 >
                   <option value="member">Member (Can execute assigned tasks)</option>
                   <option value="manager">Manager (Can approve safe & medium risk actions)</option>
                   <option value="admin">Admin (Full approval & configuration governance)</option>
                 </select>
               </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600">
-                Current seats allocated: <strong>{members.length} / {features.max_seats}</strong>.
+              <div className="p-2.5 bg-paper-inset border border-rule text-[13px] text-ink-muted">
+                Current seats allocated: <strong className="text-ink-text">{members.length} / {features.max_seats}</strong>.
               </div>
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-rule">
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(false)}
-                  className="px-3 py-1.5 text-slate-600 hover:text-slate-800"
+                  className="px-3 py-1.5 text-ink-muted hover:text-ink-text"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-xs"
+                  className="px-4 py-1.5 bg-amber hover:opacity-90 text-ink-950 font-semibold"
                 >
                   Send Invitation
                 </button>

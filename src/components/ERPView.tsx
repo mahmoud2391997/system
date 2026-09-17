@@ -77,31 +77,33 @@ export const ERPView: React.FC<ERPViewProps> = ({
 
   if (!features.erp_enabled) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-5 text-slate-400">
-          <Lock className="w-8 h-8 text-slate-500" />
-        </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">ERP & Financial Suite is Locked</h2>
-        <p className="text-slate-600 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
-          You are currently on the <strong>{features.tier.toUpperCase()}</strong> tier. Enterprise tier unlocks
-          full operational coverage, compliance isolation, and financial modules.
-        </p>
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl max-w-md mx-auto mb-6 text-left text-xs text-emerald-900 space-y-2">
-          <div className="font-semibold flex items-center gap-1.5 text-emerald-950">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-            What Enterprise Tier Unlocks (Section 5 & 14):
+      <div className="max-w-xl mx-auto px-4 py-16">
+        <div className="bg-ink-900 border border-ink-border p-8 text-center">
+          <div className="w-12 h-12 rounded-lg border border-rule bg-paper-inset flex items-center justify-center mx-auto mb-5">
+            <Lock className="w-5 h-5 text-amber" />
           </div>
-          <p>• Finance, Invoicing, Procurement, and Inventory modules</p>
-          <p>• High-Risk Policy Engine gate for financial ledger liabilities</p>
-          <p>• Dedicated PostgreSQL schema / database isolation options</p>
-          <p>• Unmetered automation caps (20,000+ emails, 50,000+ messages)</p>
+          <h2 className="text-xl font-semibold text-paper tracking-tight mb-2">ERP & Financial Suite is Locked</h2>
+          <p className="text-paper/70 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
+            You are currently on the <strong className="text-paper">{features.tier.toUpperCase()}</strong> tier. Enterprise tier unlocks
+            full operational coverage, compliance isolation, and financial modules.
+          </p>
+          <div className="p-4 bg-ink-800 border border-ink-border text-left text-sm text-paper/80 space-y-2 mb-6">
+            <div className="font-semibold flex items-center gap-1.5 text-amber">
+              <Sparkles className="w-4 h-4 text-amber" />
+              What Enterprise Tier Unlocks (Section 5 & 14):
+            </div>
+            <p>• Finance, Invoicing, Procurement, and Inventory modules</p>
+            <p>• High-Risk Policy Engine gate for financial ledger liabilities</p>
+            <p>• Dedicated PostgreSQL schema / database isolation options</p>
+            <p>• Unmetered automation caps (20,000+ emails, 50,000+ messages)</p>
+          </div>
+          <button
+            onClick={() => onUpgradeInPlace('enterprise')}
+            className="px-5 py-2.5 bg-amber hover:opacity-90 text-ink-950 text-sm font-semibold transition-colors"
+          >
+            Upgrade in-place to Enterprise Tier
+          </button>
         </div>
-        <button
-          onClick={() => onUpgradeInPlace('enterprise')}
-          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
-        >
-          Upgrade in-place to Enterprise Tier
-        </button>
       </div>
     );
   }
@@ -168,14 +170,14 @@ export const ERPView: React.FC<ERPViewProps> = ({
   const statusBadge = (status: Invoice['status']) => {
     switch (status) {
       case 'paid':
-        return <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">PAID</span>;
+        return <span className="text-[10px] font-mono px-2 py-0.5 bg-ok-bg text-ok border border-ok/40 font-semibold">PAID</span>;
       case 'sent':
-        return <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold">SENT</span>;
+        return <span className="text-[10px] font-mono px-2 py-0.5 bg-warn-bg text-ink-muted border border-amber/40 font-semibold">SENT</span>;
       case 'pending_approval':
-        return <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">APPROVAL GATE</span>;
+        return <span className="text-[10px] font-mono px-2 py-0.5 bg-warn-bg text-amber border border-amber/50 font-semibold">APPROVAL GATE</span>;
       case 'draft':
       default:
-        return <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-semibold">DRAFT</span>;
+        return <span className="text-[10px] font-mono px-2 py-0.5 bg-paper-inset text-ink-muted border border-rule font-semibold">DRAFT</span>;
     }
   };
 
@@ -204,48 +206,49 @@ export const ERPView: React.FC<ERPViewProps> = ({
     return true;
   });
 
+  const fieldClass = 'w-full px-3 py-2 border border-rule bg-paper-raised text-ink-text text-sm placeholder:text-ink-muted/70 focus:outline-none focus:border-amber';
+  const overlayClass = 'fixed inset-0 z-50 bg-ink-950/80 flex items-center justify-center p-4';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Honest Preview Disclaimer Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
-        <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+      <div className="bg-warn-bg border border-amber/30 p-3.5 flex items-start gap-3 text-sm text-ink-text">
+        <Sparkles className="w-4 h-4 text-ink-muted shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold block text-amber-950">Tier Preview — Phase 6 ERP Financial Engine</span>
-          <p className="text-amber-800 mt-0.5">
-            This screen demonstrates invoice generation, accounts receivable, and inventory tracking for the Enterprise tier. Invoices shown here are preview records.
+          <span className="font-semibold block text-ink-text">ERP is the financial system of record</span>
+          <p className="text-ink-muted mt-0.5">
+            Invoices, receivables, and inventory. High-risk financial actions stay behind the policy gate.
           </p>
         </div>
       </div>
 
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-paper-raised p-5 border border-rule">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-ink-muted bg-warn-bg px-2 py-0.5 border border-amber/30">
               Enterprise Module Unlocked
             </span>
-            <span className="text-xs text-slate-600">• System of Record: ERP</span>
+            <span className="text-sm text-ink-muted">• System of Record: ERP</span>
           </div>
-          <h1 className="text-lg font-bold text-slate-900 mt-1">Enterprise Operations & Financial Suite</h1>
-          <p className="text-xs text-slate-600">
+          <h1 className="text-xl font-semibold text-ink-text mt-1 tracking-tight">Enterprise Operations & Financial Suite</h1>
+          <p className="text-sm text-ink-muted">
             Finance, automated billing, inventory reorders, and high-risk policy gating for financial records.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50 text-xs">
+          <div className="inline-flex border border-rule p-1 bg-paper-inset text-sm">
             <button
               onClick={() => setActiveTab('invoices')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                activeTab === 'invoices' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1.5 font-medium transition-colors ${
+                activeTab === 'invoices' ? 'bg-amber text-ink-950' : 'text-ink-muted hover:text-ink-text'
               }`}
             >
               Invoices & Billing ({invoices.length})
             </button>
             <button
               onClick={() => setActiveTab('inventory')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                activeTab === 'inventory' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1.5 font-medium transition-colors ${
+                activeTab === 'inventory' ? 'bg-amber text-ink-950' : 'text-ink-muted hover:text-ink-text'
               }`}
             >
               SKU Inventory ({inventory.length})
@@ -254,14 +257,14 @@ export const ERPView: React.FC<ERPViewProps> = ({
 
           <button
             onClick={() => setShowCreateInvoiceModal(true)}
-            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors"
+            className="px-3 py-1.5 bg-amber hover:opacity-90 text-ink-950 text-sm font-semibold flex items-center gap-1 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Issue Invoice</span>
           </button>
           <button
             onClick={() => setShowCreateItemModal(true)}
-            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+            className="px-3 py-1.5 bg-paper hover:bg-paper-inset text-ink-text border border-rule text-sm font-medium flex items-center gap-1 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add SKU Item</span>
@@ -269,63 +272,61 @@ export const ERPView: React.FC<ERPViewProps> = ({
         </div>
       </div>
 
-      {/* Financial KPIs Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <DollarSign className="w-3.5 h-3.5 text-ok" />
             Total Billed
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             ${totalInvoiced.toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">{invoices.length} invoices generated</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">{invoices.length} invoices generated</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-ok" />
             Realized Revenue
           </div>
-          <div className="text-xl font-bold text-emerald-600 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             ${paidInvoiced.toLocaleString()}
           </div>
-          <div className="text-[11px] text-emerald-700 mt-0.5 font-medium">Reconciled in general ledger</div>
+          <div className="text-[11px] text-ok mt-0.5 font-medium">Reconciled in general ledger</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Receipt className="w-3.5 h-3.5 text-blue-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <Receipt className="w-3.5 h-3.5 text-ink-muted" />
             Outstanding AR
           </div>
-          <div className="text-xl font-bold text-blue-600 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             ${outstandingAR.toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Pending customer settlement</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">Pending customer settlement</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Package className="w-3.5 h-3.5 text-purple-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <Package className="w-3.5 h-3.5 text-ink-muted" />
             Inventory Valuation
           </div>
-          <div className="text-xl font-bold text-purple-600 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             ${inventoryValuation.toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Across {inventory.length} active SKUs</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">Across {inventory.length} active SKUs</div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-wrap items-center gap-3 bg-paper-raised p-3 border border-rule">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-ink-muted absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={activeTab === 'invoices' ? "Search invoices by number or client name..." : "Search inventory by name, SKU, or category..."}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-rule bg-paper-raised text-ink-text placeholder:text-ink-muted/70 focus:outline-none focus:border-amber"
           />
         </div>
 
@@ -333,7 +334,7 @@ export const ERPView: React.FC<ERPViewProps> = ({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 bg-white"
+            className="text-sm border border-rule px-2.5 py-2 text-ink-text bg-paper-raised"
           >
             <option value="all">All Invoice Statuses</option>
             <option value="paid">Paid</option>
@@ -345,25 +346,24 @@ export const ERPView: React.FC<ERPViewProps> = ({
       </div>
 
       {activeTab === 'invoices' ? (
-        /* Invoices Table */
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="bg-paper-raised border border-rule overflow-hidden">
+          <div className="p-4 border-b border-rule flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-sm font-bold text-slate-900">Commercial Invoices & Accounts Receivable</h3>
+              <Receipt className="w-4 h-4 text-ink-muted" />
+              <h3 className="text-sm font-semibold text-ink-text">Commercial Invoices & Accounts Receivable</h3>
             </div>
             <button
               onClick={() => onTriggerAction('Reconcile recent paid invoices and generate Q3 ledger summary')}
-              className="text-xs text-emerald-700 hover:text-emerald-900 font-medium flex items-center gap-1"
+              className="text-sm text-ink-muted hover:text-ink-text font-medium flex items-center gap-1"
             >
-              <Sparkles className="w-3 h-3 text-emerald-600" />
+              <Sparkles className="w-3 h-3" />
               AI Ledger Reconcile
             </button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50 text-[11px] text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+            <table className="w-full text-left text-sm text-ink-muted">
+              <thead className="bg-paper-inset text-[11px] text-ink-muted uppercase tracking-wider font-semibold border-b border-rule">
                 <tr>
                   <th className="py-3 px-4">Invoice #</th>
                   <th className="py-3 px-4">Client</th>
@@ -374,18 +374,18 @@ export const ERPView: React.FC<ERPViewProps> = ({
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rule">
                 {filteredInvoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                  <tr key={inv.id} className="hover:bg-paper-inset/80 transition-colors">
+                    <td className="py-3.5 px-4 font-mono font-bold text-ink-text">
                       {inv.invoice_number}
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800">
+                    <td className="py-3.5 px-4 font-semibold text-ink-text">
                       {inv.client_name}
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-500">{inv.issue_date}</td>
-                    <td className="py-3.5 px-4 font-mono text-slate-500">{inv.due_date}</td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                    <td className="py-3.5 px-4 font-mono text-ink-muted">{inv.issue_date}</td>
+                    <td className="py-3.5 px-4 font-mono text-ink-muted">{inv.due_date}</td>
+                    <td className="py-3.5 px-4 font-mono font-bold text-ink-text">
                       ${inv.amount.toLocaleString()} {inv.currency}
                     </td>
                     <td className="py-3.5 px-4">{statusBadge(inv.status)}</td>
@@ -393,7 +393,7 @@ export const ERPView: React.FC<ERPViewProps> = ({
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => setSelectedPreviewInvoice(inv)}
-                          className="px-2 py-1 text-slate-600 hover:text-slate-900 border border-slate-200 rounded hover:bg-slate-100 flex items-center gap-1"
+                          className="px-2 py-1 text-ink-muted hover:text-ink-text border border-rule hover:bg-paper-inset flex items-center gap-1"
                           title="View printable PDF invoice"
                         >
                           <Eye className="w-3 h-3" />
@@ -402,7 +402,7 @@ export const ERPView: React.FC<ERPViewProps> = ({
                         {inv.status !== 'paid' && onUpdateInvoiceStatus && (
                           <button
                             onClick={() => onUpdateInvoiceStatus(inv.id, 'paid')}
-                            className="px-2 py-1 text-emerald-700 hover:text-emerald-900 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 font-semibold"
+                            className="px-2 py-1 text-ok bg-ok-bg border border-ok/40 hover:bg-ok hover:text-ink-950 font-semibold"
                             title="Mark as settled & paid"
                           >
                             Mark Paid
@@ -417,25 +417,24 @@ export const ERPView: React.FC<ERPViewProps> = ({
           </div>
         </div>
       ) : (
-        /* Inventory Table */
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="bg-paper-raised border border-rule overflow-hidden">
+          <div className="p-4 border-b border-rule flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-sm font-bold text-slate-900">Warehouse SKU Inventory & Reorder Rules</h3>
+              <Package className="w-4 h-4 text-ink-muted" />
+              <h3 className="text-sm font-semibold text-ink-text">Warehouse SKU Inventory & Reorder Rules</h3>
             </div>
             <button
               onClick={() => onTriggerAction('Audit inventory levels and prepare restock purchase order for low stock SKUs')}
-              className="text-xs text-emerald-700 hover:text-emerald-900 font-medium flex items-center gap-1"
+              className="text-sm text-ink-muted hover:text-ink-text font-medium flex items-center gap-1"
             >
-              <Sparkles className="w-3 h-3 text-emerald-600" />
+              <Sparkles className="w-3 h-3" />
               AI Stock Optimization
             </button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50 text-[11px] text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+            <table className="w-full text-left text-sm text-ink-muted">
+              <thead className="bg-paper-inset text-[11px] text-ink-muted uppercase tracking-wider font-semibold border-b border-rule">
                 <tr>
                   <th className="py-3 px-4">SKU Code</th>
                   <th className="py-3 px-4">Item Name</th>
@@ -447,31 +446,31 @@ export const ERPView: React.FC<ERPViewProps> = ({
                   <th className="py-3 px-4 text-right">Quick Adjust</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rule">
                 {filteredInventory.map((item) => {
                   const isLow = item.stock_quantity <= item.reorder_point;
                   const itemTotalVal = item.stock_quantity * item.unit_cost;
 
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-900">{item.sku}</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-800">{item.name}</td>
-                      <td className="py-3.5 px-4 text-slate-500">{item.category}</td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                    <tr key={item.id} className="hover:bg-paper-inset/80 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-bold text-ink-text">{item.sku}</td>
+                      <td className="py-3.5 px-4 font-semibold text-ink-text">{item.name}</td>
+                      <td className="py-3.5 px-4 text-ink-muted">{item.category}</td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-ink-text">
                         {item.stock_quantity} units
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-slate-600">${item.unit_cost}</td>
-                      <td className="py-3.5 px-4 font-mono font-semibold text-slate-800">
+                      <td className="py-3.5 px-4 font-mono text-ink-muted">${item.unit_cost}</td>
+                      <td className="py-3.5 px-4 font-mono font-semibold text-ink-text">
                         ${itemTotalVal.toLocaleString()}
                       </td>
                       <td className="py-3.5 px-4">
                         {isLow ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 font-semibold">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 bg-danger-bg text-danger border border-danger/40 font-semibold">
                             <AlertTriangle className="w-2.5 h-2.5" />
                             REORDER NOW (&le;{item.reorder_point})
                           </span>
                         ) : (
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                          <span className="text-[10px] font-mono px-2 py-0.5 bg-ok-bg text-ok border border-ok/40 font-semibold">
                             HEALTHY
                           </span>
                         )}
@@ -481,21 +480,21 @@ export const ERPView: React.FC<ERPViewProps> = ({
                           <div className="flex items-center justify-end gap-1 font-mono text-[11px]">
                             <button
                               onClick={() => onUpdateInventoryStock(item.id, -1)}
-                              className="px-1.5 py-0.5 text-slate-600 hover:text-red-700 border border-slate-200 rounded hover:bg-slate-100"
+                              className="px-1.5 py-0.5 text-ink-muted hover:text-danger border border-rule hover:bg-paper-inset"
                               title="Deduct 1 unit used"
                             >
                               -1
                             </button>
                             <button
                               onClick={() => onUpdateInventoryStock(item.id, 1)}
-                              className="px-1.5 py-0.5 text-slate-600 hover:text-blue-700 border border-slate-200 rounded hover:bg-slate-100"
+                              className="px-1.5 py-0.5 text-ink-muted hover:text-ink-text border border-rule hover:bg-paper-inset"
                               title="Add 1 unit"
                             >
                               +1
                             </button>
                             <button
                               onClick={() => onUpdateInventoryStock(item.id, 10)}
-                              className="px-2 py-0.5 text-emerald-700 hover:text-emerald-900 bg-emerald-50 border border-emerald-200 rounded font-semibold hover:bg-emerald-100"
+                              className="px-2 py-0.5 text-ok bg-ok-bg border border-ok/40 font-semibold hover:bg-ok hover:text-ink-950"
                               title="Restock batch of 10"
                             >
                               +10 Restock
@@ -512,54 +511,51 @@ export const ERPView: React.FC<ERPViewProps> = ({
         </div>
       )}
 
-      {/* Printable / Preview Invoice Modal */}
       {selectedPreviewInvoice && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div className={`${overlayClass} overflow-y-auto`}>
+          <div className="bg-paper-raised max-w-2xl w-full p-6 sm:p-8 border border-rule max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-rule">
               <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-emerald-600" />
-                <span className="font-bold text-sm text-slate-900">APEX HORIZON ENTERPRISE</span>
+                <Building2 className="w-5 h-5 text-ink-muted" />
+                <span className="font-bold text-sm text-ink-text">APEX HORIZON ENTERPRISE</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => window.print()}
-                  className="px-2.5 py-1 text-slate-600 hover:text-slate-900 border border-slate-200 rounded text-xs flex items-center gap-1"
+                  className="px-2.5 py-1 text-ink-muted hover:text-ink-text border border-rule text-sm flex items-center gap-1"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   Print
                 </button>
                 <button
                   onClick={() => setSelectedPreviewInvoice(null)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-ink-muted hover:text-ink-text"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            {/* Invoice Header */}
-            <div className="grid grid-cols-2 gap-6 my-6 text-xs">
+            <div className="grid grid-cols-2 gap-6 my-6 text-sm">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400">ISSUED TO</span>
-                <h3 className="font-bold text-slate-900 text-sm mt-0.5">{selectedPreviewInvoice.client_name}</h3>
-                <p className="text-slate-500 mt-1">Enterprise Operations Account</p>
-                <p className="text-slate-500">Corporate Billing Division</p>
+                <span className="text-[10px] uppercase font-bold text-ink-muted">ISSUED TO</span>
+                <h3 className="font-bold text-ink-text text-sm mt-0.5">{selectedPreviewInvoice.client_name}</h3>
+                <p className="text-ink-muted mt-1">Enterprise Operations Account</p>
+                <p className="text-ink-muted">Corporate Billing Division</p>
               </div>
               <div className="text-right">
-                <span className="text-[10px] uppercase font-bold text-slate-400">INVOICE DETAILS</span>
-                <div className="font-mono font-bold text-slate-900 text-sm mt-0.5">
+                <span className="text-[10px] uppercase font-bold text-ink-muted">INVOICE DETAILS</span>
+                <div className="font-mono font-bold text-ink-text text-sm mt-0.5">
                   {selectedPreviewInvoice.invoice_number}
                 </div>
-                <div className="text-slate-500 text-[11px] mt-1">Issue Date: {selectedPreviewInvoice.issue_date}</div>
-                <div className="text-slate-500 text-[11px]">Due Date: {selectedPreviewInvoice.due_date}</div>
+                <div className="text-ink-muted text-[11px] mt-1 font-mono">Issue Date: {selectedPreviewInvoice.issue_date}</div>
+                <div className="text-ink-muted text-[11px] font-mono">Due Date: {selectedPreviewInvoice.due_date}</div>
                 <div className="mt-2">{statusBadge(selectedPreviewInvoice.status)}</div>
               </div>
             </div>
 
-            {/* Line items table */}
-            <table className="w-full text-left text-xs mb-6 border-t border-b border-slate-200">
-              <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase">
+            <table className="w-full text-left text-sm mb-6 border-t border-b border-rule">
+              <thead className="bg-paper-inset text-[10px] font-bold text-ink-muted uppercase">
                 <tr>
                   <th className="py-2.5 px-3">Description</th>
                   <th className="py-2.5 px-3 text-right">Qty</th>
@@ -567,13 +563,13 @@ export const ERPView: React.FC<ERPViewProps> = ({
                   <th className="py-2.5 px-3 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rule">
                 {selectedPreviewInvoice.line_items.map((item, idx) => (
                   <tr key={idx}>
-                    <td className="py-3 px-3 text-slate-800">{item.description}</td>
-                    <td className="py-3 px-3 text-right font-mono text-slate-600">{item.quantity}</td>
-                    <td className="py-3 px-3 text-right font-mono text-slate-600">${item.unit_price.toLocaleString()}</td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900">
+                    <td className="py-3 px-3 text-ink-text">{item.description}</td>
+                    <td className="py-3 px-3 text-right font-mono text-ink-muted">{item.quantity}</td>
+                    <td className="py-3 px-3 text-right font-mono text-ink-muted">${item.unit_price.toLocaleString()}</td>
+                    <td className="py-3 px-3 text-right font-mono font-bold text-ink-text">
                       ${(item.quantity * item.unit_price).toLocaleString()}
                     </td>
                   </tr>
@@ -581,80 +577,77 @@ export const ERPView: React.FC<ERPViewProps> = ({
               </tbody>
             </table>
 
-            {/* Invoice Total */}
-            <div className="flex justify-end text-right text-xs space-y-1 mb-6">
+            <div className="flex justify-end text-right text-sm space-y-1 mb-6">
               <div className="w-48 space-y-1.5">
-                <div className="flex justify-between text-slate-500">
+                <div className="flex justify-between text-ink-muted">
                   <span>Subtotal:</span>
-                  <span className="font-mono text-slate-800">${selectedPreviewInvoice.amount.toLocaleString()}</span>
+                  <span className="font-mono text-ink-text">${selectedPreviewInvoice.amount.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-slate-500">
+                <div className="flex justify-between text-ink-muted">
                   <span>Tax (0% Enterprise):</span>
-                  <span className="font-mono text-slate-800">$0.00</span>
+                  <span className="font-mono text-ink-text">$0.00</span>
                 </div>
-                <div className="flex justify-between font-bold text-sm text-slate-900 pt-2 border-t border-slate-200">
+                <div className="flex justify-between font-bold text-sm text-ink-text pt-2 border-t border-rule">
                   <span>Total Due:</span>
-                  <span className="font-mono text-emerald-600">
+                  <span className="font-mono text-ok">
                     ${selectedPreviewInvoice.amount.toLocaleString()} {selectedPreviewInvoice.currency}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px] text-slate-600">
-              <strong>Cryptographic General Ledger Note:</strong> This document was generated and policy-evaluated under the Nexus Autonomous ERP Engine. Audit hash recorded in immutable ledger.
+            <div className="bg-paper-inset p-3 border border-rule text-[13px] text-ink-muted">
+              <strong className="text-ink-text">Cryptographic General Ledger Note:</strong> This document was generated and policy-evaluated under the Nexus Autonomous ERP Engine. Audit hash recorded in immutable ledger.
             </div>
           </div>
         </div>
       )}
 
-      {/* Create Invoice Modal */}
       {showCreateInvoiceModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-bold text-slate-900">Issue Commercial Invoice</h3>
-              <button onClick={() => setShowCreateInvoiceModal(false)} className="text-slate-400 hover:text-slate-600">
+        <div className={overlayClass}>
+          <div className="bg-paper-raised max-w-lg w-full p-6 border border-rule max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-rule mb-4">
+              <h3 className="text-lg font-semibold text-ink-text tracking-tight">Issue Commercial Invoice</h3>
+              <button onClick={() => setShowCreateInvoiceModal(false)} className="text-ink-muted hover:text-ink-text">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <form onSubmit={handleCreateInvoice} className="space-y-4 text-xs">
+            <form onSubmit={handleCreateInvoice} className="space-y-4 text-sm">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Client Organization *</label>
+                <label className="block font-medium text-ink-text mb-1">Client Organization *</label>
                 <input
                   type="text"
                   required
                   value={invoiceClient}
                   onChange={(e) => setInvoiceClient(e.target.value)}
                   placeholder="e.g. Vanguard Logistics Global"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Due Date</label>
+                <label className="block font-medium text-ink-text mb-1">Due Date</label>
                 <input
                   type="date"
                   value={invoiceDueDate}
                   onChange={(e) => setInvoiceDueDate(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
 
-              {/* Line Items */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="font-semibold text-slate-700">Line Items</label>
+                  <label className="font-medium text-ink-text">Line Items</label>
                   <button
                     type="button"
                     onClick={handleAddLineItem}
-                    className="text-emerald-600 hover:text-emerald-800 font-medium text-[11px] flex items-center gap-0.5"
+                    className="text-ink-muted hover:text-ink-text font-medium text-[13px] flex items-center gap-0.5"
                   >
                     <Plus className="w-3 h-3" /> Add Item
                   </button>
                 </div>
                 <div className="space-y-2">
                   {lineItems.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                    <div key={idx} className="flex items-center gap-2 p-2 bg-paper-inset border border-rule">
                       <input
                         type="text"
                         placeholder="Description"
@@ -664,7 +657,7 @@ export const ERPView: React.FC<ERPViewProps> = ({
                           updated[idx].description = e.target.value;
                           setLineItems(updated);
                         }}
-                        className="flex-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs"
+                        className="flex-1 px-2 py-1 bg-paper-raised border border-rule text-sm text-ink-text"
                       />
                       <input
                         type="number"
@@ -676,7 +669,7 @@ export const ERPView: React.FC<ERPViewProps> = ({
                           updated[idx].quantity = Number(e.target.value);
                           setLineItems(updated);
                         }}
-                        className="w-16 px-2 py-1 bg-white border border-slate-200 rounded text-xs text-right"
+                        className="w-16 px-2 py-1 bg-paper-raised border border-rule text-sm text-right text-ink-text"
                       />
                       <input
                         type="number"
@@ -688,13 +681,13 @@ export const ERPView: React.FC<ERPViewProps> = ({
                           updated[idx].unit_price = Number(e.target.value);
                           setLineItems(updated);
                         }}
-                        className="w-24 px-2 py-1 bg-white border border-slate-200 rounded text-xs text-right"
+                        className="w-24 px-2 py-1 bg-paper-raised border border-rule text-sm text-right text-ink-text"
                       />
                       {lineItems.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveLineItem(idx)}
-                          className="text-slate-400 hover:text-red-600 p-1"
+                          className="text-ink-muted hover:text-danger p-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -704,23 +697,22 @@ export const ERPView: React.FC<ERPViewProps> = ({
                 </div>
               </div>
 
-              {/* Calculated Total */}
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between text-xs font-bold text-emerald-900">
+              <div className="p-3 bg-warn-bg border border-amber/30 flex items-center justify-between text-sm font-bold text-ink-text">
                 <span>Calculated Total:</span>
-                <span className="font-mono text-sm">${calculatedInvoiceTotal.toLocaleString()} USD</span>
+                <span className="font-mono">${calculatedInvoiceTotal.toLocaleString()} USD</span>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-rule">
                 <button
                   type="button"
                   onClick={() => setShowCreateInvoiceModal(false)}
-                  className="px-3 py-1.5 text-slate-600 hover:text-slate-800"
+                  className="px-3 py-1.5 text-ink-muted hover:text-ink-text"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-xs"
+                  className="px-4 py-1.5 bg-amber hover:opacity-90 text-ink-950 font-semibold"
                 >
                   Issue Invoice
                 </button>
@@ -730,45 +722,44 @@ export const ERPView: React.FC<ERPViewProps> = ({
         </div>
       )}
 
-      {/* Create Inventory SKU Modal */}
       {showCreateItemModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-bold text-slate-900">Add Inventory SKU</h3>
-              <button onClick={() => setShowCreateItemModal(false)} className="text-slate-400 hover:text-slate-600">
+        <div className={overlayClass}>
+          <div className="bg-paper-raised max-w-md w-full p-6 border border-rule">
+            <div className="flex items-center justify-between pb-3 border-b border-rule mb-4">
+              <h3 className="text-lg font-semibold text-ink-text tracking-tight">Add Inventory SKU</h3>
+              <button onClick={() => setShowCreateItemModal(false)} className="text-ink-muted hover:text-ink-text">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <form onSubmit={handleCreateItem} className="space-y-3 text-xs">
+            <form onSubmit={handleCreateItem} className="space-y-3 text-sm">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Item / SKU Name *</label>
+                <label className="block font-medium text-ink-text mb-1">Item / SKU Name *</label>
                 <input
                   type="text"
                   required
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
                   placeholder="e.g. Edge AI Gateway Controller"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">SKU Code</label>
+                  <label className="block font-medium text-ink-text mb-1">SKU Code</label>
                   <input
                     type="text"
                     value={newSku}
                     onChange={(e) => setNewSku(e.target.value)}
                     placeholder="e.g. SKU-8820"
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 font-mono"
+                    className={`${fieldClass} font-mono`}
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Category</label>
+                  <label className="block font-medium text-ink-text mb-1">Category</label>
                   <select
                     value={newItemCategory}
                     onChange={(e) => setNewItemCategory(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   >
                     <option value="Hardware Appliances">Hardware Appliances</option>
                     <option value="Telemetry Sensors">Telemetry Sensors</option>
@@ -779,47 +770,47 @@ export const ERPView: React.FC<ERPViewProps> = ({
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Initial Stock</label>
+                  <label className="block font-medium text-ink-text mb-1">Initial Stock</label>
                   <input
                     type="number"
                     min="0"
                     value={newItemStock}
                     onChange={(e) => setNewItemStock(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Reorder Point</label>
+                  <label className="block font-medium text-ink-text mb-1">Reorder Point</label>
                   <input
                     type="number"
                     min="1"
                     value={newItemReorder}
                     onChange={(e) => setNewItemReorder(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Unit Cost ($)</label>
+                  <label className="block font-medium text-ink-text mb-1">Unit Cost ($)</label>
                   <input
                     type="number"
                     min="0"
                     value={newItemCost}
                     onChange={(e) => setNewItemCost(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-rule">
                 <button
                   type="button"
                   onClick={() => setShowCreateItemModal(false)}
-                  className="px-3 py-1.5 text-slate-600 hover:text-slate-800"
+                  className="px-3 py-1.5 text-ink-muted hover:text-ink-text"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-xs"
+                  className="px-4 py-1.5 bg-amber hover:opacity-90 text-ink-950 font-semibold"
                 >
                   Save SKU
                 </button>

@@ -89,40 +89,42 @@ export const CRMView: React.FC<CRMViewProps> = ({
 
   if (!features.crm_enabled) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-5 text-slate-400">
-          <Lock className="w-8 h-8 text-slate-500" />
-        </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">CRM & Pipeline Module is Locked</h2>
-        <p className="text-slate-600 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
-          You are currently on the <strong>{features.tier.toUpperCase()}</strong> tier. In Nexus, modules
-          unlock by configuration — never by data migration or creating a second account.
-        </p>
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl max-w-md mx-auto mb-6 text-left text-xs text-blue-900 space-y-2">
-          <div className="font-semibold flex items-center gap-1.5 text-blue-950">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            What Startup Tier Unlocks (Section 5):
+      <div className="max-w-xl mx-auto px-4 py-16">
+        <div className="bg-ink-900 border border-ink-border p-8 text-center">
+          <div className="w-12 h-12 rounded-lg border border-rule bg-paper-inset flex items-center justify-center mx-auto mb-5">
+            <Lock className="w-5 h-5 text-amber" />
           </div>
-          <p>• Contacts, Leads, Pipeline Stages, and Deal Tracking</p>
-          <p>• Autonomous timeline logging for all AI calls and emails</p>
-          <p>• Increased automation cap to 500 emails, 1,000 messages</p>
+          <h2 className="text-xl font-semibold text-paper tracking-tight mb-2">CRM & Pipeline Module is Locked</h2>
+          <p className="text-paper/70 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
+            You are currently on the <strong className="text-paper">{features.tier.toUpperCase()}</strong> tier. In Nexus, modules
+            unlock by configuration — never by data migration or creating a second account.
+          </p>
+          <div className="p-4 bg-ink-800 border border-ink-border text-left text-sm text-paper/80 space-y-2 mb-6">
+            <div className="font-semibold flex items-center gap-1.5 text-amber">
+              <Sparkles className="w-4 h-4 text-amber" />
+              What Startup Tier Unlocks (Section 5):
+            </div>
+            <p>• Contacts, Leads, Pipeline Stages, and Deal Tracking</p>
+            <p>• Autonomous timeline logging for all AI calls and emails</p>
+            <p>• Increased automation cap to 500 emails, 1,000 messages</p>
+          </div>
+          <button
+            onClick={() => onUpgradeInPlace('startup')}
+            className="px-5 py-2.5 bg-amber hover:opacity-90 text-ink-950 text-sm font-semibold transition-colors"
+          >
+            Upgrade in-place to Startup Tier
+          </button>
         </div>
-        <button
-          onClick={() => onUpgradeInPlace('startup')}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
-        >
-          Upgrade in-place to Startup Tier
-        </button>
       </div>
     );
   }
 
   const stages: { id: Deal['stage']; label: string; color: string }[] = [
-    { id: 'prospect', label: 'Prospect', color: 'border-t-slate-400' },
-    { id: 'qualified', label: 'Qualified', color: 'border-t-blue-500' },
-    { id: 'proposal', label: 'Proposal', color: 'border-t-indigo-500' },
-    { id: 'negotiation', label: 'Negotiation', color: 'border-t-amber-500' },
-    { id: 'won', label: 'Won', color: 'border-t-emerald-500' },
+    { id: 'prospect', label: 'Prospect', color: 'border-t-ink-muted' },
+    { id: 'qualified', label: 'Qualified', color: 'border-t-amber-dim' },
+    { id: 'proposal', label: 'Proposal', color: 'border-t-amber' },
+    { id: 'negotiation', label: 'Negotiation', color: 'border-t-warn' },
+    { id: 'won', label: 'Won', color: 'border-t-ok' },
   ];
 
   // Pipeline Financial KPIs
@@ -233,48 +235,50 @@ export const CRMView: React.FC<CRMViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const fieldClass = 'w-full px-3 py-2 border border-rule bg-paper-raised text-ink-text text-sm placeholder:text-ink-muted/70 focus:outline-none focus:border-amber';
+  const overlayClass = 'fixed inset-0 z-50 bg-ink-950/80 flex items-center justify-center p-4';
+  const modalClass = 'bg-paper-raised max-w-md w-full p-6 border border-rule';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Honest Preview Disclaimer Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
-        <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+      <div className="bg-warn-bg border border-amber/30 p-3.5 flex items-start gap-3 text-sm text-ink-text">
+        <Sparkles className="w-4 h-4 text-ink-muted shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold block text-amber-950">Tier Preview — Phase 4 CRM Engine</span>
-          <p className="text-amber-800 mt-0.5">
-            This screen illustrates the upcoming Startup tier CRM pipeline. Records displayed here are demonstration models and are not yet committed to the production relational database.
+          <span className="font-semibold block text-ink-text">CRM is the system of record</span>
+          <p className="text-ink-muted mt-0.5">
+            Pipeline, contacts, and deals live here. Every AI email, WhatsApp message, and voice call writes back to the record automatically.
           </p>
         </div>
       </div>
 
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-paper-raised p-5 border border-rule">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-ink-muted bg-warn-bg px-2 py-0.5 border border-amber/30">
               Startup Module Unlocked
             </span>
-            <span className="text-xs text-slate-600">• System of Record: CRM</span>
+            <span className="text-sm text-ink-muted">• System of Record: CRM</span>
           </div>
-          <h1 className="text-lg font-bold text-slate-900 mt-1">Customer Relationship Management</h1>
-          <p className="text-xs text-slate-600">
+          <h1 className="text-xl font-semibold text-ink-text mt-1 tracking-tight">Customer Relationship Management</h1>
+          <p className="text-sm text-ink-muted">
             Automated timeline logging: every email, WhatsApp message, and voice call logs directly back here.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50 text-xs">
+          <div className="inline-flex border border-rule p-1 bg-paper-inset text-sm">
             <button
               onClick={() => setActiveTab('pipeline')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                activeTab === 'pipeline' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1.5 font-medium transition-colors ${
+                activeTab === 'pipeline' ? 'bg-amber text-ink-950' : 'text-ink-muted hover:text-ink-text'
               }`}
             >
               Deals Pipeline ({deals.length})
             </button>
             <button
               onClick={() => setActiveTab('contacts')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                activeTab === 'contacts' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1.5 font-medium transition-colors ${
+                activeTab === 'contacts' ? 'bg-amber text-ink-950' : 'text-ink-muted hover:text-ink-text'
               }`}
             >
               Contacts & Leads ({contacts.length})
@@ -283,21 +287,21 @@ export const CRMView: React.FC<CRMViewProps> = ({
 
           <button
             onClick={() => setIsAddDealModalOpen(true)}
-            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors"
+            className="px-3 py-1.5 bg-amber hover:opacity-90 text-ink-950 text-sm font-semibold flex items-center gap-1 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New Deal</span>
           </button>
           <button
             onClick={() => setIsAddContactModalOpen(true)}
-            className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+            className="px-3 py-1.5 bg-paper hover:bg-paper-inset text-ink-text border border-rule text-sm font-medium flex items-center gap-1 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New Lead</span>
           </button>
           <button
             onClick={handleExportCSV}
-            className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg border border-slate-200 hover:bg-slate-50"
+            className="p-1.5 text-ink-muted hover:text-ink-text border border-rule hover:bg-paper-inset"
             title="Export CSV"
           >
             <Download className="w-4 h-4" />
@@ -305,70 +309,68 @@ export const CRMView: React.FC<CRMViewProps> = ({
         </div>
       </div>
 
-      {/* CRM KPI Metrics Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <DollarSign className="w-3.5 h-3.5 text-ok" />
             Total Pipeline
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             ${totalPipelineValue.toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">{deals.length} active opportunities</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">{deals.length} active opportunities</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-ink-muted" />
             Weighted Pipeline
           </div>
-          <div className="text-xl font-bold text-blue-600 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             ${Math.round(weightedPipelineValue).toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Probability-adjusted forecast</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">Probability-adjusted forecast</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Briefcase className="w-3.5 h-3.5 text-indigo-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <Briefcase className="w-3.5 h-3.5 text-ok" />
             Win Rate
           </div>
-          <div className="text-xl font-bold text-indigo-600 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             {winRate}%
           </div>
-          <div className="text-[11px] text-emerald-600 mt-0.5 font-medium">{wonDeals.length} won deals</div>
+          <div className="text-[11px] text-ok mt-0.5 font-medium">{wonDeals.length} won deals</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5 text-purple-600" />
+        <div className="bg-paper-raised p-4 border border-rule">
+          <div className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-ink-muted" />
             Total Accounts
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+          <div className="text-xl font-semibold text-ink-text font-mono mt-1">
             {contacts.length}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Autonomous timeline active</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">Autonomous timeline active</div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex items-center gap-3 bg-paper-raised p-3 border border-rule">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-ink-muted absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search leads, accounts, deals, or tags..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-rule bg-paper-raised text-ink-text placeholder:text-ink-muted/70 focus:outline-none focus:border-amber"
           />
         </div>
         {activeTab === 'pipeline' && (
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value as any)}
-            className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 bg-white"
+            className="text-sm border border-rule px-2.5 py-2 text-ink-text bg-paper-raised"
           >
             <option value="all">All Stages</option>
             <option value="prospect">Prospect</option>
@@ -381,7 +383,6 @@ export const CRMView: React.FC<CRMViewProps> = ({
       </div>
 
       {activeTab === 'pipeline' ? (
-        /* Deals Pipeline Kanban */
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {stages.map((st) => {
             const stageDeals = filteredDeals.filter((d) => d.stage === st.id);
@@ -390,15 +391,15 @@ export const CRMView: React.FC<CRMViewProps> = ({
             return (
               <div
                 key={st.id}
-                className={`bg-slate-50/70 rounded-xl border border-slate-200 p-3.5 flex flex-col border-t-4 ${st.color}`}
+                className={`bg-paper-inset border border-rule p-3.5 flex flex-col border-t-[3px] ${st.color}`}
               >
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-                  <span className="text-xs font-bold text-slate-800">{st.label}</span>
-                  <span className="text-[11px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-rule">
+                  <span className="text-sm font-semibold text-ink-text">{st.label}</span>
+                  <span className="text-[11px] font-mono text-ink-muted bg-paper-raised px-1.5 py-0.5 border border-rule">
                     {stageDeals.length}
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-500 mb-3 font-mono">
+                <div className="text-[11px] text-ink-muted mb-3 font-mono">
                   ${totalValue.toLocaleString()}
                 </div>
 
@@ -412,16 +413,16 @@ export const CRMView: React.FC<CRMViewProps> = ({
                     return (
                       <div
                         key={deal.id}
-                        className="bg-white rounded-lg border border-slate-200 p-3 shadow-xs hover:shadow-sm transition-shadow text-left"
+                        className="bg-paper-raised border border-rule p-3 hover:border-amber/40 transition-colors text-left"
                       >
                         <div className="flex items-start justify-between gap-1 mb-1">
-                          <h4 className="text-xs font-semibold text-slate-900 leading-tight">
+                          <h4 className="text-sm font-semibold text-ink-text leading-tight">
                             {deal.title}
                           </h4>
                           {onDeleteDeal && (
                             <button
                               onClick={() => onDeleteDeal(deal.id)}
-                              className="text-slate-300 hover:text-red-600 transition-colors p-0.5"
+                              className="text-ink-muted hover:text-danger transition-colors p-0.5"
                               title="Remove deal"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -429,25 +430,24 @@ export const CRMView: React.FC<CRMViewProps> = ({
                           )}
                         </div>
 
-                        <p className="text-[11px] text-slate-500 flex items-center gap-1 mb-2">
-                          <Users className="w-3 h-3 text-slate-400" />
+                        <p className="text-[13px] text-ink-muted flex items-center gap-1 mb-2">
+                          <Users className="w-3 h-3 text-ink-muted" />
                           {deal.contact_name}
                         </p>
 
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                          <span className="font-bold text-slate-900">${deal.value.toLocaleString()}</span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                        <div className="flex items-center justify-between pt-2 border-t border-rule text-sm">
+                          <span className="font-semibold text-ink-text font-mono">${deal.value.toLocaleString()}</span>
+                          <span className="text-[11px] font-mono px-1.5 py-0.5 bg-paper-inset text-ink-muted">
                             {deal.probability}% win
                           </span>
                         </div>
 
-                        {/* Stage transition controls */}
-                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <div className="mt-2.5 pt-2 border-t border-rule flex items-center justify-between">
                           <div className="flex items-center gap-1">
                             {prevStage && (
                               <button
                                 onClick={() => onAdvanceDealStage(deal.id, prevStage)}
-                                className="text-[10px] text-slate-400 hover:text-slate-700 p-1 rounded hover:bg-slate-100"
+                                className="text-[11px] text-ink-muted hover:text-ink-text p-1 hover:bg-paper-inset"
                                 title={`Move back to ${prevStage}`}
                               >
                                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -457,7 +457,7 @@ export const CRMView: React.FC<CRMViewProps> = ({
                               onClick={() =>
                                 onTriggerAction(`Advance deal "${deal.title}" and email follow-up proposal to ${deal.contact_name}`)
                               }
-                              className="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-0.5 px-1 py-0.5 rounded hover:bg-indigo-50"
+                              className="text-[11px] text-ink-muted hover:text-ink-text font-medium flex items-center gap-0.5 px-1 py-0.5 hover:bg-warn-bg"
                               title="Ask AI to draft outreach"
                             >
                               <Sparkles className="w-2.5 h-2.5" />
@@ -468,7 +468,7 @@ export const CRMView: React.FC<CRMViewProps> = ({
                           {nextStage && (
                             <button
                               onClick={() => onAdvanceDealStage(deal.id, nextStage)}
-                              className="text-[10px] text-blue-600 hover:text-blue-800 font-medium flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-50 hover:bg-blue-100"
+                              className="text-[11px] text-ink-text hover:text-ink-950 font-medium flex items-center gap-0.5 px-1.5 py-0.5 bg-paper-inset hover:bg-amber"
                             >
                               Advance <ChevronRight className="w-3 h-3" />
                             </button>
@@ -479,7 +479,7 @@ export const CRMView: React.FC<CRMViewProps> = ({
                   })}
 
                   {stageDeals.length === 0 && (
-                    <div className="text-center py-6 text-[11px] text-slate-400 border border-dashed border-slate-200 rounded-lg">
+                    <div className="text-center py-6 text-[13px] text-ink-muted border border-dashed border-rule">
                       No deals in {st.label}
                     </div>
                   )}
@@ -489,38 +489,36 @@ export const CRMView: React.FC<CRMViewProps> = ({
           })}
         </div>
       ) : (
-        /* Contacts Directory & Timeline */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Contact List */}
-          <div className="md:col-span-1 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className="p-3.5 bg-slate-50 border-b border-slate-200 font-semibold text-xs text-slate-800 flex items-center justify-between">
+          <div className="md:col-span-1 bg-paper-raised border border-rule overflow-hidden">
+            <div className="p-3.5 bg-paper-inset border-b border-rule font-semibold text-sm text-ink-text flex items-center justify-between">
               <span>Active Leads & Accounts ({filteredContacts.length})</span>
               <button
                 onClick={() => setIsAddContactModalOpen(true)}
-                className="text-blue-600 hover:text-blue-800 font-bold flex items-center gap-0.5 text-[11px]"
+                className="text-ink-muted hover:text-ink-text font-bold flex items-center gap-0.5 text-[11px]"
               >
                 <Plus className="w-3 h-3" /> Add Lead
               </button>
             </div>
-            <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
+            <div className="divide-y divide-rule max-h-[600px] overflow-y-auto">
               {filteredContacts.map((cnt) => (
                 <button
                   key={cnt.id}
                   onClick={() => setSelectedContact(cnt)}
                   className={`w-full text-left p-3.5 transition-colors flex items-start justify-between ${
-                    selectedContact?.id === cnt.id ? 'bg-indigo-50/50' : 'hover:bg-slate-50'
+                    selectedContact?.id === cnt.id ? 'bg-warn-bg' : 'hover:bg-paper-inset'
                   }`}
                 >
                   <div>
-                    <div className="font-semibold text-xs text-slate-900">{cnt.name}</div>
-                    <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                      <Building className="w-3 h-3 text-slate-400" />
+                    <div className="font-semibold text-sm text-ink-text">{cnt.name}</div>
+                    <div className="text-[13px] text-ink-muted flex items-center gap-1 mt-0.5">
+                      <Building className="w-3 h-3" />
                       {cnt.company}
                     </div>
-                    <div className="text-[10px] text-slate-600 mt-1">{cnt.last_activity}</div>
+                    <div className="text-[11px] text-ink-muted mt-1 font-mono">{cnt.last_activity}</div>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 bg-ok-bg text-ok border border-ok/30">
                       Score: {cnt.lead_score}
                     </span>
                   </div>
@@ -529,18 +527,17 @@ export const CRMView: React.FC<CRMViewProps> = ({
             </div>
           </div>
 
-          {/* Selected Contact Detailed Timeline */}
           {selectedContact && (
-            <div className="md:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-5">
-              <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+            <div className="md:col-span-2 bg-paper-raised border border-rule p-5 space-y-5">
+              <div className="flex items-start justify-between pb-4 border-b border-rule">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">{selectedContact.name}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">{selectedContact.company}</p>
+                  <h3 className="text-xl font-semibold text-ink-text tracking-tight">{selectedContact.name}</h3>
+                  <p className="text-sm text-ink-muted mt-0.5">{selectedContact.company}</p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedContact.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
+                        className="text-[11px] font-mono px-2 py-0.5 bg-paper-inset text-ink-text border border-rule"
                       >
                         {tag}
                       </span>
@@ -553,7 +550,7 @@ export const CRMView: React.FC<CRMViewProps> = ({
                     onClick={() =>
                       onTriggerAction(`Draft email to ${selectedContact.name} at ${selectedContact.company} about the platform scope`)
                     }
-                    className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-medium flex items-center gap-1"
+                    className="px-3 py-1.5 bg-paper-inset hover:bg-warn-bg text-ink-text border border-rule text-sm font-medium flex items-center gap-1"
                   >
                     <Mail className="w-3 h-3" />
                     AI Email
@@ -562,7 +559,7 @@ export const CRMView: React.FC<CRMViewProps> = ({
                     onClick={() =>
                       onTriggerAction(`Send WhatsApp message to ${selectedContact.name} confirming compliance checklist`)
                     }
-                    className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-medium flex items-center gap-1"
+                    className="px-3 py-1.5 bg-paper-inset hover:bg-ok-bg text-ink-text border border-rule text-sm font-medium flex items-center gap-1"
                   >
                     <MessageSquare className="w-3 h-3" />
                     WhatsApp
@@ -571,7 +568,7 @@ export const CRMView: React.FC<CRMViewProps> = ({
                     onClick={() =>
                       onTriggerAction(`Place an outbound voice call to ${selectedContact.name} to discuss agreement parameters`)
                     }
-                    className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-medium flex items-center gap-1"
+                    className="px-3 py-1.5 bg-paper-inset hover:bg-warn-bg text-ink-text border border-rule text-sm font-medium flex items-center gap-1"
                   >
                     <Phone className="w-3 h-3" />
                     Voice Call
@@ -579,67 +576,62 @@ export const CRMView: React.FC<CRMViewProps> = ({
                 </div>
               </div>
 
-              {/* AI Lead Summary */}
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 mb-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <div className="bg-paper-inset p-4 border border-rule">
+                <div className="flex items-center gap-1.5 text-sm font-semibold text-ink-text mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-ink-muted" />
                   Autonomous Operational Context
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed">{selectedContact.ai_summary}</p>
+                <p className="text-sm text-ink-text leading-relaxed">{selectedContact.ai_summary}</p>
               </div>
 
-              {/* Contact Channels */}
-              <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                  <span className="text-slate-400 block text-[10px]">EMAIL ADDRESS</span>
-                  <span className="text-slate-800">{selectedContact.email}</span>
+              <div className="grid grid-cols-2 gap-3 text-sm font-mono">
+                <div className="p-3 border border-rule bg-paper-raised">
+                  <span className="text-ink-muted block text-[11px]">EMAIL ADDRESS</span>
+                  <span className="text-ink-text">{selectedContact.email}</span>
                 </div>
-                <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                  <span className="text-slate-400 block text-[10px]">PHONE / WHATSAPP</span>
-                  <span className="text-slate-800">{selectedContact.phone || 'N/A'}</span>
+                <div className="p-3 border border-rule bg-paper-raised">
+                  <span className="text-ink-muted block text-[11px]">PHONE / WHATSAPP</span>
+                  <span className="text-ink-text">{selectedContact.phone || 'N/A'}</span>
                 </div>
               </div>
 
-              {/* Interactive Contact Activity Notes Thread */}
-              <div className="border-t border-slate-200 pt-4 space-y-3">
-                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+              <div className="border-t border-rule pt-4 space-y-3">
+                <h4 className="text-[11px] font-bold text-ink-text uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-ink-muted" />
                   Activity Timeline & Operator Notes
                 </h4>
 
-                {/* Add note input */}
                 <form onSubmit={handleAddNote} className="flex gap-2">
                   <input
                     type="text"
                     value={newNoteText}
                     onChange={(e) => setNewNoteText(e.target.value)}
                     placeholder="Log a call note, follow-up insight, or update..."
-                    className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 text-sm border border-rule bg-paper-raised text-ink-text placeholder:text-ink-muted/70 focus:outline-none focus:border-amber"
                   />
                   <button
                     type="submit"
                     disabled={!newNoteText.trim() || isSubmittingNote}
-                    className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium flex items-center gap-1 disabled:opacity-50"
+                    className="px-3 py-2 bg-ink-900 hover:bg-ink-800 text-paper text-sm font-medium flex items-center gap-1 disabled:opacity-50"
                   >
                     <Send className="w-3 h-3" />
                     <span>Post</span>
                   </button>
                 </form>
 
-                {/* Notes list */}
                 <div className="space-y-2 mt-3">
                   {(selectedContact.notes && selectedContact.notes.length > 0) ? (
                     selectedContact.notes.map((note) => (
-                      <div key={note.id} className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/70 text-xs">
-                        <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
-                          <span className="font-semibold text-slate-700">{note.author}</span>
-                          <span>{new Date(note.timestamp).toLocaleString()}</span>
+                      <div key={note.id} className="p-2.5 border border-rule bg-paper-inset text-sm">
+                        <div className="flex items-center justify-between text-[11px] text-ink-muted mb-1">
+                          <span className="font-semibold text-ink-text">{note.author}</span>
+                          <span className="font-mono">{new Date(note.timestamp).toLocaleString()}</span>
                         </div>
-                        <p className="text-slate-700">{note.text}</p>
+                        <p className="text-ink-text">{note.text}</p>
                       </div>
                     ))
                   ) : (
-                    <div className="text-xs text-slate-400 italic py-2">
+                    <div className="text-sm text-ink-muted italic py-2">
                       No manual notes recorded yet. Autonomous communications will automatically populate this log.
                     </div>
                   )}
@@ -650,68 +642,67 @@ export const CRMView: React.FC<CRMViewProps> = ({
         </div>
       )}
 
-      {/* Add Contact / Lead Modal */}
       {isAddContactModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-bold text-slate-900">Add New CRM Lead / Account</h3>
-              <button onClick={() => setIsAddContactModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+        <div className={overlayClass}>
+          <div className={modalClass}>
+            <div className="flex items-center justify-between pb-3 border-b border-rule mb-4">
+              <h3 className="text-lg font-semibold text-ink-text tracking-tight">Add New CRM Lead / Account</h3>
+              <button onClick={() => setIsAddContactModalOpen(false)} className="text-ink-muted hover:text-ink-text">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <form onSubmit={handleCreateContact} className="space-y-3 text-xs">
+            <form onSubmit={handleCreateContact} className="space-y-3 text-sm">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Contact Name *</label>
+                <label className="block font-medium text-ink-text mb-1">Contact Name *</label>
                 <input
                   type="text"
                   required
                   value={contactForm.name}
                   onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                   placeholder="e.g. Rachel Adams"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Company / Organization *</label>
+                <label className="block font-medium text-ink-text mb-1">Company / Organization *</label>
                 <input
                   type="text"
                   required
                   value={contactForm.company}
                   onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
                   placeholder="e.g. Horizon Logistics Inc"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Email Address</label>
+                  <label className="block font-medium text-ink-text mb-1">Email Address</label>
                   <input
                     type="email"
                     value={contactForm.email}
                     onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                     placeholder="rachel@horizon.com"
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Phone / WhatsApp</label>
+                  <label className="block font-medium text-ink-text mb-1">Phone / WhatsApp</label>
                   <input
                     type="text"
                     value={contactForm.phone}
                     onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
                     placeholder="+1 (555) 234-5678"
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Inbound Channel</label>
+                  <label className="block font-medium text-ink-text mb-1">Inbound Channel</label>
                   <select
                     value={contactForm.channel}
                     onChange={(e) => setContactForm({ ...contactForm, channel: e.target.value as any })}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   >
                     <option value="email">Email</option>
                     <option value="whatsapp">WhatsApp</option>
@@ -720,48 +711,48 @@ export const CRMView: React.FC<CRMViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Lead Score (0-100)</label>
+                  <label className="block font-medium text-ink-text mb-1">Lead Score (0-100)</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={contactForm.lead_score}
                     onChange={(e) => setContactForm({ ...contactForm, lead_score: Number(e.target.value) })}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Tags (comma-separated)</label>
+                <label className="block font-medium text-ink-text mb-1">Tags (comma-separated)</label>
                 <input
                   type="text"
                   value={contactForm.tags}
                   onChange={(e) => setContactForm({ ...contactForm, tags: e.target.value })}
                   placeholder="e.g. Enterprise, High Intent, Q4 Budget"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">AI Operational Summary</label>
+                <label className="block font-medium text-ink-text mb-1">AI Operational Summary</label>
                 <textarea
                   rows={2}
                   value={contactForm.ai_summary}
                   onChange={(e) => setContactForm({ ...contactForm, ai_summary: e.target.value })}
                   placeholder="Key background context for autonomous agent interactions..."
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-rule">
                 <button
                   type="button"
                   onClick={() => setIsAddContactModalOpen(false)}
-                  className="px-3 py-1.5 text-slate-600 hover:text-slate-800"
+                  className="px-3 py-1.5 text-ink-muted hover:text-ink-text"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs"
+                  className="px-4 py-1.5 bg-amber hover:opacity-90 text-ink-950 font-semibold"
                 >
                   Save Lead
                 </button>
@@ -771,30 +762,29 @@ export const CRMView: React.FC<CRMViewProps> = ({
         </div>
       )}
 
-      {/* Add Deal Modal */}
       {isAddDealModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-bold text-slate-900">Create Sales Deal Opportunity</h3>
-              <button onClick={() => setIsAddDealModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+        <div className={overlayClass}>
+          <div className={modalClass}>
+            <div className="flex items-center justify-between pb-3 border-b border-rule mb-4">
+              <h3 className="text-lg font-semibold text-ink-text tracking-tight">Create Sales Deal Opportunity</h3>
+              <button onClick={() => setIsAddDealModalOpen(false)} className="text-ink-muted hover:text-ink-text">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <form onSubmit={handleCreateDeal} className="space-y-3 text-xs">
+            <form onSubmit={handleCreateDeal} className="space-y-3 text-sm">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Deal Title *</label>
+                <label className="block font-medium text-ink-text mb-1">Deal Title *</label>
                 <input
                   type="text"
                   required
                   value={dealForm.title}
                   onChange={(e) => setDealForm({ ...dealForm, title: e.target.value })}
                   placeholder="e.g. Apex Horizon - Fleet Automation Rollout"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Associated Contact Account</label>
+                <label className="block font-medium text-ink-text mb-1">Associated Contact Account</label>
                 <select
                   value={dealForm.contact_id}
                   onChange={(e) => {
@@ -805,7 +795,7 @@ export const CRMView: React.FC<CRMViewProps> = ({
                       contact_name: selected ? selected.name : dealForm.contact_name,
                     });
                   }}
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                  className={fieldClass}
                 >
                   {contacts.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -816,35 +806,35 @@ export const CRMView: React.FC<CRMViewProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Deal Value ($ USD) *</label>
+                  <label className="block font-medium text-ink-text mb-1">Deal Value ($ USD) *</label>
                   <input
                     type="number"
                     required
                     min="1"
                     value={dealForm.value}
                     onChange={(e) => setDealForm({ ...dealForm, value: Number(e.target.value) })}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Win Probability (%)</label>
+                  <label className="block font-medium text-ink-text mb-1">Win Probability (%)</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={dealForm.probability}
                     onChange={(e) => setDealForm({ ...dealForm, probability: Number(e.target.value) })}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Pipeline Stage</label>
+                  <label className="block font-medium text-ink-text mb-1">Pipeline Stage</label>
                   <select
                     value={dealForm.stage}
                     onChange={(e) => setDealForm({ ...dealForm, stage: e.target.value as any })}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   >
                     <option value="prospect">Prospect</option>
                     <option value="qualified">Qualified</option>
@@ -854,26 +844,26 @@ export const CRMView: React.FC<CRMViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Target Close Date</label>
+                  <label className="block font-medium text-ink-text mb-1">Target Close Date</label>
                   <input
                     type="date"
                     value={dealForm.expected_close}
                     onChange={(e) => setDealForm({ ...dealForm, expected_close: e.target.value })}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300"
+                    className={fieldClass}
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-rule">
                 <button
                   type="button"
                   onClick={() => setIsAddDealModalOpen(false)}
-                  className="px-3 py-1.5 text-slate-600 hover:text-slate-800"
+                  className="px-3 py-1.5 text-ink-muted hover:text-ink-text"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-xs"
+                  className="px-4 py-1.5 bg-amber hover:opacity-90 text-ink-950 font-semibold"
                 >
                   Create Deal
                 </button>

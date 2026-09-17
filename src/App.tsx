@@ -14,7 +14,6 @@ import {
   IntegrationStatus,
   WorkspaceTier,
 } from './types';
-import { Header } from './components/Header';
 import { Navigation, ActiveTab } from './components/Navigation';
 import { AITerminal } from './components/AITerminal';
 import { CRMView } from './components/CRMView';
@@ -25,6 +24,7 @@ import { IntegrationsView } from './components/IntegrationsView';
 import { UpgradeModal } from './components/UpgradeModal';
 import { AuthView } from './components/AuthView';
 import { Loader2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('terminal');
@@ -33,7 +33,6 @@ export default function App() {
   const [isAgentLoading, setIsAgentLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  // Authentication State
   const [currentUser, setCurrentUser] = useState<{
     id: string;
     email: string;
@@ -41,7 +40,6 @@ export default function App() {
     avatar?: string;
   } | null>(null);
 
-  // Application Data State
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [features, setFeatures] = useState<WorkspaceFeatures | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
@@ -55,7 +53,6 @@ export default function App() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
 
-  // Authenticated fetch wrapper
   const fetchWithAuth = useCallback((url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('nexus_token');
     const headers = new Headers(options.headers || {});
@@ -65,7 +62,6 @@ export default function App() {
     return fetch(url, { ...options, headers, credentials: 'include' });
   }, []);
 
-  // Fetch all workspace data
   const loadAllData = useCallback(async () => {
     try {
       const [wsRes, intRes, apprRes, audRes, msgRes] = await Promise.all([
@@ -86,7 +82,6 @@ export default function App() {
       if (audRes) setAuditLogs(audRes.auditLogs || []);
       if (msgRes) setMessages(msgRes.messages || []);
 
-      // Load preview module data
       if (wsRes?.features?.crm_enabled) {
         const crmRes = await fetchWithAuth('/api/crm').then((r) => r.ok ? r.json() : null);
         if (crmRes && !crmRes.locked) {
@@ -112,7 +107,6 @@ export default function App() {
     }
   }, [fetchWithAuth]);
 
-  // Check auth status on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -136,7 +130,6 @@ export default function App() {
     checkAuth();
   }, [fetchWithAuth, loadAllData]);
 
-  // Handle Logout
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -149,7 +142,6 @@ export default function App() {
     setFeatures(null);
   };
 
-  // Send message to agent
   const handleSendMessage = async (text: string) => {
     setIsAgentLoading(true);
     try {
@@ -178,7 +170,6 @@ export default function App() {
     }
   };
 
-  // Decide approval (Approve / Reject)
   const handleDecideApproval = async (id: string, decision: 'approve' | 'reject', notes?: string) => {
     try {
       const res = await fetchWithAuth(`/api/approvals/${id}/decide`, {
@@ -202,7 +193,6 @@ export default function App() {
     }
   };
 
-  // Upgrade-in-place
   const handleSelectTier = async (targetTier: WorkspaceTier) => {
     setIsUpdatingTier(true);
     try {
@@ -216,6 +206,13 @@ export default function App() {
         setFeatures(data.features);
         await loadAllData();
         setIsUpgradeModalOpen(false);
+        const homes: Record<WorkspaceTier, ActiveTab> = {
+          personal: 'terminal',
+          startup: 'crm',
+          team: 'team',
+          enterprise: 'erp',
+        };
+        setActiveTab(homes[targetTier]);
       }
     } catch (err) {
       console.error('Error updating tier:', err);
@@ -224,26 +221,28 @@ export default function App() {
     }
   };
 
-  // Trigger action from modules
   const handleTriggerAction = (prompt: string) => {
     setActiveTab('terminal');
     handleSendMessage(prompt);
   };
 
+  const handleSelectTab = (tab: ActiveTab) => {
+    setActiveTab(tab);
+  };
+
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-[#F8F7F3] flex items-center justify-center text-[#20232D]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-7 h-7 animate-spin text-[#171717]" />
-          <span className="font-mono text-xs text-[#737373] tracking-wider">
-            nexus@core:~$ initializing session...
-          </span>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <span className="font-mono text-lg font-bold">N</span>
+          </div>
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       </div>
     );
   }
 
-  // If not authenticated, render AuthView
   if (!currentUser || !workspace || !features) {
     return (
       <AuthView
@@ -257,100 +256,97 @@ export default function App() {
     );
   }
 
-  const pendingApprovalsCount = approvals.filter((a) => a.status === 'pending').length;
-
   return (
-    <div className="min-h-screen bg-[#F8F7F3] text-[#20232D] font-sans flex flex-col selection:bg-[#5C4620] selection:text-[#171717]">
-      {/* Global Header */}
-      <Header
-        workspace={workspace}
-        features={features}
-        members={members}
-        currentUser={currentUser}
-        onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
-        onLogout={handleLogout}
-        pendingApprovalsCount={pendingApprovalsCount}
-      />
-
-      {/* Primary Navigation */}
+    <div className="h-screen bg-background text-foreground font-sans flex flex-col overflow-hidden">
       <Navigation
+        workspace={workspace}
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleSelectTab}
         features={features}
-        pendingApprovalsCount={pendingApprovalsCount}
+        currentUser={currentUser}
+        members={members}
+        onSelectTier={handleSelectTier}
+        isUpdatingTier={isUpdatingTier}
+        onLogout={handleLogout}
       />
-
-      {/* Main Viewport Content */}
-      <main className="flex-1 pb-12">
-        {activeTab === 'terminal' && (
-          <AITerminal
-            messages={messages}
-            pendingApprovals={approvals}
-            features={features}
-            onSendMessage={handleSendMessage}
-            onDecideApproval={handleDecideApproval}
-            isLoading={isAgentLoading}
-          />
-        )}
-
-        {activeTab === 'crm' && (
-          <CRMView
-            features={features}
-            contacts={contacts}
-            deals={deals}
-            onUpgradeInPlace={() => handleSelectTier('startup')}
-            onAdvanceDealStage={async (dealId, nextStage) => {
-              setDeals((prev) => prev.map((d) => d.id === dealId ? { ...d, stage: nextStage } : d));
-            }}
-            onTriggerAction={handleTriggerAction}
-          />
-        )}
-
-        {activeTab === 'team' && (
-          <TeamView
-            features={features}
-            tasks={tasks}
-            members={members}
-            onUpgradeInPlace={() => handleSelectTier('team')}
-            onCreateTask={(task) => {
-              setTasks((prev) => [
-                {
-                  id: `task_${Date.now()}`,
-                  workspace_id: workspace.id,
-                  title: task.title,
-                  priority: task.priority,
-                  assignee: task.assignee_name,
-                  status: 'todo',
-                  due_date: task.due_date || '2026-10-01',
-                },
-                ...prev,
-              ]);
-            }}
-            onTriggerAction={handleTriggerAction}
-          />
-        )}
-
-        {activeTab === 'erp' && (
-          <ERPView
-            features={features}
-            invoices={invoices}
-            inventory={inventory}
-            onUpgradeInPlace={() => handleSelectTier('enterprise')}
-            onTriggerAction={handleTriggerAction}
-          />
-        )}
-
-        {activeTab === 'audit' && <AuditLedgerView auditLogs={auditLogs} />}
-
-        {activeTab === 'integrations' && (
-          <IntegrationsView
-            integrations={integrations}
-            onRefresh={loadAllData}
-          />
-        )}
+      <main className={`flex-1 min-h-0 bg-background ${activeTab === 'terminal' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className={activeTab === 'terminal' ? 'h-full min-h-0' : 'pb-12'}
+          >
+            {activeTab === 'terminal' && (
+              <AITerminal
+                messages={messages}
+                pendingApprovals={approvals}
+                features={features}
+                onSendMessage={handleSendMessage}
+                onDecideApproval={handleDecideApproval}
+                isLoading={isAgentLoading}
+                currentUser={currentUser}
+                onLogout={handleLogout}
+                integrations={integrations}
+                auditLogs={auditLogs}
+                tasks={tasks}
+                onSelectTier={handleSelectTier}
+                isUpdatingTier={isUpdatingTier}
+              />
+            )}
+            {activeTab === 'crm' && (
+              <CRMView
+                features={features}
+                contacts={contacts}
+                deals={deals}
+                onUpgradeInPlace={() => handleSelectTier('startup')}
+                onAdvanceDealStage={async (dealId, nextStage) => {
+                  setDeals((prev) => prev.map((d) => d.id === dealId ? { ...d, stage: nextStage } : d));
+                }}
+                onTriggerAction={handleTriggerAction}
+              />
+            )}
+            {activeTab === 'team' && (
+              <TeamView
+                features={features}
+                tasks={tasks}
+                members={members}
+                onUpgradeInPlace={() => handleSelectTier('team')}
+                onCreateTask={(task) => {
+                  setTasks((prev) => [
+                    {
+                      id: `task_${Date.now()}`,
+                      workspace_id: workspace.id,
+                      title: task.title,
+                      priority: task.priority,
+                      assignee: task.assignee_name,
+                      status: 'todo',
+                      due_date: task.due_date || '2026-10-01',
+                    },
+                    ...prev,
+                  ]);
+                }}
+                onTriggerAction={handleTriggerAction}
+              />
+            )}
+            {activeTab === 'erp' && (
+              <ERPView
+                features={features}
+                invoices={invoices}
+                inventory={inventory}
+                onUpgradeInPlace={() => handleSelectTier('enterprise')}
+                onTriggerAction={handleTriggerAction}
+              />
+            )}
+            {activeTab === 'audit' && <AuditLedgerView auditLogs={auditLogs} />}
+            {activeTab === 'integrations' && (
+              <IntegrationsView integrations={integrations} onRefresh={loadAllData} />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
-
-      {/* Upgrade-in-Place Modal */}
       <UpgradeModal
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}

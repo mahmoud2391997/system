@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, UserPlus, LogIn, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface AuthViewProps {
   onSuccess: (data: { user: any; workspace: any; token: string }) => void;
@@ -52,154 +52,89 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#F8F7F3] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans selection:bg-[#5C4620] selection:text-[#171717]">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="mx-auto h-12 w-12 rounded bg-[#FFFFFF] border border-[#E5E5E5] flex items-center justify-center text-[#171717]">
-          <span className="font-mono text-2xl font-black tracking-tighter">N</span>
-        </div>
-        <h2 className="mt-4 text-xl font-bold tracking-tight text-[#20232D]">
-          Nexus Operations
-        </h2>
-        <p className="mt-1 text-xs text-[#737373] font-mono">
-          nexus-auth — /core/tenant-gate
-        </p>
-      </div>
+  const fieldClass =
+    'w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring';
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-[#FFFFFF] py-6 px-6 border border-[#E5E5E5] rounded-lg shadow-2xl sm:px-8 space-y-5">
-          {error && (
-            <div className="p-3 bg-[#4A2622] border border-[#E2574C]/60 rounded text-xs text-[#E2574C] flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-[#E2574C]" />
-              <span>{error}</span>
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 text-center shadow-sm">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <span className="font-mono text-lg font-bold">N</span>
+        </div>
+        <div className="mt-4 font-mono text-lg font-semibold tracking-[0.2em]">NEXUS</div>
+        <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          AI prompt
+        </p>
+        <p className="mt-6 text-sm text-muted-foreground">
+          Continue as Sarah Chen for the demo. Conversations, tasks, and approvals stay scoped to this workspace.
+        </p>
+
+        {error && (
+          <div className="mt-4 flex items-center gap-2 rounded-md border border-destructive/30 bg-danger-bg p-3 text-left text-sm text-destructive">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={loading}
+          className="mt-6 w-full rounded-md bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50"
+        >
+          {loading ? 'Signing in…' : 'Continue as Sarah Chen'}
+        </button>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-[11px] uppercase tracking-[0.14em]">
+            <span className="bg-card px-2 text-muted-foreground">Or email</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-left text-sm">
+          {mode === 'register' && (
+            <div>
+              <label className="mb-1 block font-medium text-foreground">Full name</label>
+              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Alex Mercer" className={fieldClass} />
             </div>
           )}
+          <div>
+            <label className="mb-1 block font-medium text-foreground">Email</label>
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="operator@company.com" className={fieldClass} />
+          </div>
+          <div>
+            <label className="mb-1 block font-medium text-foreground">Password</label>
+            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={fieldClass} />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-md border border-border px-3 py-2.5 font-medium text-foreground transition hover:bg-muted disabled:opacity-50"
+          >
+            {mode === 'register' ? 'Create workspace' : 'Sign in with email'}
+          </button>
+        </form>
 
-          {/* Quick Demo Access */}
-          <div className="bg-[#F8F7F3] border border-[#E5E5E5] rounded-lg p-3.5 text-xs space-y-2.5">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[#171717] font-bold">nexus❯ eval --demo</span>
-            </div>
-            <p className="text-[#20232D]/70 leading-relaxed font-sans text-xs">
-              Authenticate immediately as <strong>Sarah Chen</strong> (Owner, Personal Tier). Loads active Gmail/Calendar integration and CRM records.
-            </p>
-            <button
-              onClick={handleDemoLogin}
-              disabled={loading}
-              className="w-full py-2 px-3 bg-[#171717] hover:bg-[#171717]/90 text-[#F8F7F3] font-mono font-bold rounded text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>LOGIN AS SARAH CHEN (DEMO)</span>
+        <p className="mt-4 text-[13px] text-muted-foreground">
+          {mode === 'login' ? (
+            <button type="button" className="hover:text-foreground hover:underline" onClick={() => setMode('register')}>
+              Need a workspace? Register
             </button>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E5E5E5]" />
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase">
-              <span className="bg-[#FFFFFF] px-2 text-[#737373] font-mono">Or authentic credentials</span>
-            </div>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5 text-xs font-sans">
-            {mode === 'register' && (
-              <div>
-                <label className="block font-medium text-[#20232D]/80 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Alex Mercer"
-                  className="w-full px-3 py-2 border border-[#E5E5E5] rounded bg-[#F8F7F3] text-[#20232D] focus:outline-none focus:border-[#171717]"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block font-medium text-[#20232D]/80 mb-1">Email Address</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="operator@company.com"
-                className="w-full px-3 py-2 border border-[#E5E5E5] rounded bg-[#F8F7F3] text-[#20232D] focus:outline-none focus:border-[#171717]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium text-[#20232D]/80 mb-1">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-3 py-2 border border-[#E5E5E5] rounded bg-[#F8F7F3] text-[#20232D] focus:outline-none focus:border-[#171717]"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 px-3 bg-[#F8F7F3] hover:bg-[#E5E5E5] text-[#171717] border border-[#E5E5E5] font-mono text-xs font-semibold rounded transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {mode === 'register' ? (
-                <>
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>REGISTER WORKSPACE</span>
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>SIGN IN</span>
-                </>
-              )}
+          ) : (
+            <button type="button" className="hover:text-foreground hover:underline" onClick={() => setMode('login')}>
+              Already registered? Sign in
             </button>
-          </form>
+          )}
+        </p>
 
-          {/* Toggle */}
-          <div className="text-center pt-1 text-xs font-sans">
-            {mode === 'login' ? (
-              <p className="text-[#20232D]/60">
-                Need a new workspace?{' '}
-                <button
-                  onClick={() => { setMode('register'); setError(null); }}
-                  className="text-[#171717] hover:underline font-medium ml-1"
-                >
-                  Register here
-                </button>
-              </p>
-            ) : (
-              <p className="text-[#20232D]/60">
-                Already registered?{' '}
-                <button
-                  onClick={() => { setMode('login'); setError(null); }}
-                  className="text-[#171717] hover:underline font-medium ml-1"
-                >
-                  Sign in
-                </button>
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Security Footnote */}
-        <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-[#737373] font-mono">
-          <span className="flex items-center gap-1">
-            <Lock className="w-3 h-3 text-[#737373]" />
-            sha-256 + pbkdf2
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-[#5FB88A]" />
-            jwt-session
-          </span>
-        </div>
+        <p className="mt-6 flex items-center justify-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+          <ShieldCheck className="h-3 w-3" />
+          Actions are always permissioned
+        </p>
       </div>
-    </div>
+    </main>
   );
 };
