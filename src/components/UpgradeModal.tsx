@@ -28,14 +28,6 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
     monthlyCaps: { emails: number; messages: number; calls: number };
   }[] = [
     {
-      id: 'personal',
-      name: 'Personal',
-      seats: '1 User (Solo)',
-      description: 'Personal assistant that clears your inbox, books meetings, and handles follow-ups.',
-      modules: ['AI Prompt', 'Gmail & Calendar Sync', 'Policy Safety Engine', 'Web Grounding'],
-      monthlyCaps: { emails: 100, messages: 0, calls: 0 },
-    },
-    {
       id: 'startup',
       name: 'Startup',
       seats: '2–10 Users',
@@ -97,7 +89,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 my-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 my-4">
           {tiers.map((t) => {
             const isCurrent = features.tier === t.id;
 
@@ -157,7 +149,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
         </div>
 
         <div className="text-center pt-3 border-t border-ink-border font-mono text-[11px] text-amber-dim">
-          nexus // one codebase, four tiers — gated at runtime
+          nexus // one codebase, three tiers — gated at runtime
         </div>
       </div>
     </div>

@@ -24,6 +24,9 @@ interface IntegrationsViewProps {
 
 interface GoogleOAuthStatus {
   configured: boolean;
+  mode?: 'personal_gmail' | 'google_oauth';
+  oauthConfigured?: boolean;
+  liveInbox?: boolean;
   missing: string[];
   redirectUri: string;
   clientIdPreview?: string | null;
@@ -44,7 +47,10 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({
   // Fetch Google OAuth configuration status from server
   const checkOAuthStatus = async () => {
     try {
-      const res = await fetch('/api/auth/google/status');
+      const token = localStorage.getItem('nexus_token');
+      const res = await fetch('/api/auth/google/status', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         setOauthStatus(data);
@@ -113,17 +119,28 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({
   };
 
   const handleConnectWithGoogle = async () => {
-    if (!oauthStatus?.configured) {
-      setErrorMsg('Cannot connect: Google OAuth is not configured on the server. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.');
-      return;
-    }
-
     setIsConnecting(true);
     setErrorMsg(null);
     setSuccessMsg(null);
 
     try {
       const token = localStorage.getItem('nexus_token');
+      if (!oauthStatus?.oauthConfigured) {
+        const res = await fetch('/api/integrations/gmail/connect', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to connect Gmail.');
+        setIsConnecting(false);
+        setSuccessMsg(data.message || 'Gmail and Calendar are connected from your Gmail login.');
+        setTimeout(() => setSuccessMsg(null), 6000);
+        if (onRefresh) onRefresh();
+        return;
+      }
       const res = await fetch('/api/auth/google/start?format=json', {
         headers: {
           Accept: 'application/json',
@@ -157,7 +174,7 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({
   };
 
   const handleDisconnectGoogle = async () => {
-    if (!confirm('Disconnect Google Workspace credentials? Autonomous Gmail and Calendar tools will be disabled.')) return;
+    if (!confirm('Disconnect Gmail and Calendar? Inbox, send, and booking will turn off until you connect again.')) return;
     try {
       const token = localStorage.getItem('nexus_token');
       const res = await fetch('/api/integrations/google/disconnect', {
@@ -168,7 +185,7 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({
         },
       });
       if (res.ok) {
-        setSuccessMsg('Google Workspace disconnected.');
+        setSuccessMsg('Gmail disconnected.');
         if (onRefresh) onRefresh();
       }
     } catch (err: any) {
@@ -202,24 +219,20 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({
               className="px-3 py-1.5 text-xs font-semibold text-danger bg-ink-950 hover:bg-danger-bg border border-danger/60 rounded flex items-center gap-1.5 transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
-              Disconnect Google
+              Disconnect Gmail
             </button>
           ) : (
             <button
               onClick={handleConnectWithGoogle}
-              disabled={isConnecting || (oauthStatus !== null && !oauthStatus.configured)}
-              className={`px-3.5 py-1.5 rounded text-xs font-semibold flex items-center gap-2 transition-colors ${
-                oauthStatus?.configured
-                  ? 'bg-amber hover:bg-amber/90 text-ink-950 cursor-pointer'
-                  : 'bg-ink-950 text-paper/40 border border-ink-border cursor-not-allowed'
-              }`}
+              disabled={isConnecting}
+              className="px-3.5 py-1.5 rounded text-xs font-semibold flex items-center gap-2 transition-colors bg-amber hover:bg-amber/90 text-ink-950 cursor-pointer"
             >
               {isConnecting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-ink-950" />
               ) : (
                 <span className="font-mono text-xs">❯</span>
               )}
-              <span>{isConnecting ? 'Connecting...' : oauthStatus?.configured ? 'Connect with Google' : 'Google OAuth Setup Required'}</span>
+              <span>{isConnecting ? 'Connecting...' : oauthStatus?.oauthConfigured ? 'Connect with Google' : 'Connect Gmail'}</span>
             </button>
           )}
         </div>
@@ -251,14 +264,14 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({
         </div>
       )}
 
-      {oauthStatus && !oauthStatus.configured && (
+      {oauthStatus && !oauthStatus.oauthConfigured && (
         <div className="bg-ink-800 border border-ink-border p-4 text-sm font-sans">
           <div className="flex items-center gap-2 text-paper font-semibold">
-            <AlertTriangle className="w-4 h-4 text-amber shrink-0" />
-            <span>Google Workspace is not connected</span>
+            <Mail className="w-4 h-4 text-amber shrink-0" />
+            <span>Gmail login opens inbox search</span>
           </div>
           <p className="text-paper/70 mt-1.5 leading-relaxed max-w-3xl">
-            Gmail and Calendar connect through official Google OAuth. Tokens are vaulted per tenant and never injected into model prompts. Provider cards below stay ready to connect when credentials are issued.
+            Sign in with Gmail to search mail, draft messages, and use calendar. Personal accounts do not need extra inbox passwords after login.
           </p>
         </div>
       )}
@@ -300,7 +313,7 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({
                         : 'text-paper/40 bg-ink-950 border-ink-border'
                     }`}
                   >
-                    {int.connected ? 'active' : isPhase12 ? (oauthStatus?.configured ? 'oauth-ready' : 'needs-config') : 'planned'}
+                    {int.connected ? 'active' : isPhase12 ? 'gmail-ready' : 'planned'}
                   </span>
                 </div>
 
@@ -356,15 +369,11 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({
                     ) : (
                       <button
                         onClick={handleConnectWithGoogle}
-                        disabled={!oauthStatus?.configured || isConnecting}
-                        className={`font-semibold flex items-center gap-1 px-2 py-1 rounded transition-colors ${
-                          oauthStatus?.configured
-                            ? 'text-amber hover:bg-ink-700 cursor-pointer'
-                            : 'text-paper/30 cursor-not-allowed'
-                        }`}
+                        disabled={isConnecting}
+                        className="font-semibold flex items-center gap-1 px-2 py-1 rounded transition-colors text-amber hover:bg-ink-700 cursor-pointer"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        <span>{isConnecting ? 'Opening...' : 'Connect OAuth'}</span>
+                        <span>{isConnecting ? 'Opening...' : 'Connect Gmail'}</span>
                       </button>
                     )}
                   </>

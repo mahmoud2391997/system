@@ -1,4 +1,4 @@
-export type WorkspaceTier = 'personal' | 'startup' | 'team' | 'enterprise';
+export type WorkspaceTier = 'startup' | 'team' | 'enterprise';
 
 export interface WorkspaceFeatures {
   workspace_id: string;

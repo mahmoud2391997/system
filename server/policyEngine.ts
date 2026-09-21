@@ -44,9 +44,9 @@ export const REGISTERED_TOOLS: Record<string, ToolDefinition> = {
   send_email: {
     name: 'send_email',
     skill_title: 'Official Gmail / Outlook Email Dispatch',
-    description: 'Dispatches real email communication to leads, clients, or stakeholders.',
+    description: 'Dispatches email to leads, clients, or stakeholders from the signed-in Gmail account.',
     defaultRisk: 'confirmation_required',
-    externalImpactWarning: 'Sends actual external email via connected Google Workspace OAuth token.',
+    externalImpactWarning: 'Sends email from the connected Gmail account after operator approval.',
     parametersSchema: {
       recipient: { type: 'string', required: true, description: 'Recipient email address' },
       subject: { type: 'string', required: true, description: 'Subject line' },
@@ -67,9 +67,9 @@ export const REGISTERED_TOOLS: Record<string, ToolDefinition> = {
   schedule_meeting: {
     name: 'schedule_meeting',
     skill_title: 'Calendar Booking & Conflict Resolution',
-    description: 'Books an event on the user Google or Outlook calendar and sends invite.',
+    description: 'Books an event on the signed-in Gmail calendar and prepares the invite.',
     defaultRisk: 'confirmation_required',
-    externalImpactWarning: 'Creates an event on calendar and sends invitation to counterparty.',
+    externalImpactWarning: 'Creates a calendar event and invite for the counterparty after operator approval.',
     parametersSchema: {
       title: { type: 'string', required: true, description: 'Meeting title' },
       attendee_email: { type: 'string', required: true, description: 'Counterparty email' },

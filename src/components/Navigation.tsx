@@ -4,15 +4,13 @@ import { Workspace, WorkspaceFeatures, WorkspaceMember, WorkspaceTier } from '..
 
 export type ActiveTab = 'terminal' | 'crm' | 'team' | 'erp' | 'audit' | 'integrations';
 
-const PLAN_HOME: Record<WorkspaceTier, ActiveTab> = {
-  personal: 'terminal',
+export const PLAN_HOME: Record<WorkspaceTier, ActiveTab> = {
   startup: 'crm',
   team: 'team',
   enterprise: 'erp',
 };
 
 const PLANS: { id: WorkspaceTier; label: string }[] = [
-  { id: 'personal', label: 'Personal' },
   { id: 'startup', label: 'Startup' },
   { id: 'team', label: 'Team' },
   { id: 'enterprise', label: 'Enterprise' },

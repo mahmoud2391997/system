@@ -2,7 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { db, UserRecord } from './db/client.js';
 import { hashPassword, verifyPassword } from './crypto.js';
+import { randomBytes } from 'crypto';
 import { Workspace, WorkspaceMember } from '../src/types.js';
+import { connectPersonalGmail, displayNameFromEmail, isGmailAddress } from './personalServices.js';
+import { getTierConfig } from './store.js';
+import { tryAttachGmailImapFromPassword } from './googleClient.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'nexus_session_super_secret_jwt_key_2026';
 const TOKEN_EXPIRY = '7d';
@@ -31,13 +35,28 @@ export function verifyToken(token: string): AuthSession | null {
   }
 }
 
-export function signOAuthState(payload: { workspaceId: string; userId: string; returnTo?: string }): string {
+export function signOAuthState(payload: {
+  workspaceId?: string;
+  userId?: string;
+  intent?: 'login' | 'connect';
+  returnTo?: string;
+}): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
 }
 
-export function verifyOAuthState(stateToken: string): { workspaceId: string; userId: string; returnTo?: string } | null {
+export function verifyOAuthState(stateToken: string): {
+  workspaceId?: string;
+  userId?: string;
+  intent?: 'login' | 'connect';
+  returnTo?: string;
+} | null {
   try {
-    return jwt.verify(stateToken, JWT_SECRET) as { workspaceId: string; userId: string; returnTo?: string };
+    return jwt.verify(stateToken, JWT_SECRET) as {
+      workspaceId?: string;
+      userId?: string;
+      intent?: 'login' | 'connect';
+      returnTo?: string;
+    };
   } catch {
     return null;
   }
@@ -110,12 +129,7 @@ export async function registerUser(email: string, password: string, name: string
 
   await db.features.upsert({
     workspace_id: workspaceId,
-    tier: 'personal',
-    crm_enabled: false,
-    team_enabled: false,
-    erp_enabled: false,
-    max_seats: 1,
-    automation_caps: { emails: 100, messages: 0, calls: 0 },
+    ...getTierConfig('startup'),
     automation_usage: { emails: 0, messages: 0, calls: 0 },
   });
 
@@ -123,13 +137,13 @@ export async function registerUser(email: string, password: string, name: string
   await db.integrations.upsert({
     id: 'int_gmail',
     workspace_id: workspaceId,
-    provider: 'Google Cloud Platform',
-    name: 'Google Workspace Gmail API',
+    provider: 'Gmail',
+    name: 'Gmail',
     type: 'email',
-    auth_type: 'OAuth 2.0 (Server-Side AES-256 Vault)',
+    auth_type: 'Gmail login (no Google client IDs)',
     connected: false,
-    scopes: 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly',
-    description: 'Send and read official workspace emails with zero prompt token leakage.',
+    scopes: 'personal.gmail.read personal.gmail.send',
+    description: 'Send and read mail for this Gmail account.',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
@@ -137,27 +151,36 @@ export async function registerUser(email: string, password: string, name: string
   await db.integrations.upsert({
     id: 'int_calendar',
     workspace_id: workspaceId,
-    provider: 'Google Calendar v3',
-    name: 'Google Calendar API',
+    provider: 'Google Calendar',
+    name: 'Calendar',
     type: 'calendar',
-    auth_type: 'Scoped Workspace OAuth',
+    auth_type: 'Gmail login (no Google client IDs)',
     connected: false,
-    scopes: 'https://www.googleapis.com/auth/calendar.events',
-    description: 'Book events, check free/busy slots, and dispatch verified meeting invites.',
+    scopes: 'personal.calendar.read personal.calendar.write',
+    description: 'Book events and inspect upcoming meetings.',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
 
-  // Welcome message for new user
+  let liveInbox = false;
+  if (isGmailAddress(user.email)) {
+    await connectPersonalGmail(workspaceId, user.email);
+    liveInbox = await tryAttachGmailImapFromPassword(workspaceId, user.email, password);
+  }
+
   await db.messages.create(workspaceId, {
     id: `msg_init_${Date.now()}`,
     sender: 'assistant',
-    text: `Hello **${name}**! Your personal Nexus operations workspace (**${workspace.name}**) is ready.\n\nConnect Gmail and Google Calendar in the **Integrations** tab to enable real email dispatches and meeting scheduling.`,
+    text: isGmailAddress(user.email)
+      ? liveInbox
+        ? `Hello **${name}**. Signed in as **${user.email}**. Live Gmail is connected from this login — ask me to find emails from ischool or anyone else.`
+        : `Hello **${name}**. Signed in as **${user.email}**. Ask me to search your inbox, send a follow-up, or book a meeting.`
+      : `Hello **${name}**. Your workspace (**${workspace.name}**) is on the Startup plan.\n\nSign in with Gmail to turn on inbox, send, and calendar without Google client IDs.`,
     timestamp: new Date().toISOString(),
     reasoning_trace: [
       `Workspace tenant created: ${workspaceId}`,
       `Authenticated owner: ${email}`,
-      `Personal tier guardrails applied.`,
+      `Startup tier applied.`,
     ],
   });
 
@@ -168,7 +191,76 @@ export async function registerUser(email: string, password: string, name: string
   };
 
   const token = generateToken(session);
-  return { user, workspace, member, token };
+  return { user, workspace, member, token, liveInbox };
+}
+
+export async function loginWithGmail(email: string, password: string, name?: string) {
+  const normalized = email.toLowerCase().trim();
+  if (!isGmailAddress(normalized)) {
+    throw new Error('Personal login needs a Gmail address (@gmail.com).');
+  }
+  if (!password || password.length < 6) {
+    throw new Error('Password must be at least 6 characters.');
+  }
+
+  const existing = await db.users.findByEmail(normalized);
+  if (existing) {
+    if (!verifyPassword(password, existing.password_hash)) {
+      throw new Error('Invalid Gmail or password.');
+    }
+    const workspace = await db.workspaces.findByOwner(existing.id);
+    if (!workspace) {
+      throw new Error('Workspace could not be found for user.');
+    }
+    await connectPersonalGmail(workspace.id, existing.email);
+    const liveInbox = await tryAttachGmailImapFromPassword(workspace.id, existing.email, password);
+    const member = await db.members.findByUser(workspace.id, existing.id);
+    return {
+      user: existing,
+      workspace,
+      member,
+      liveInbox,
+      token: generateToken({
+        userId: existing.id,
+        email: existing.email,
+        workspaceId: workspace.id,
+      }),
+    };
+  }
+
+  return registerUser(normalized, password, (name || displayNameFromEmail(normalized)).trim());
+}
+
+export async function loginOrRegisterGoogleUser(email: string, name?: string) {
+  const normalized = email.toLowerCase().trim();
+  if (!normalized) {
+    throw new Error('Google did not return an email address.');
+  }
+
+  const existing = await db.users.findByEmail(normalized);
+  if (existing) {
+    const workspace = await db.workspaces.findByOwner(existing.id);
+    if (!workspace) {
+      throw new Error('Workspace could not be found for user.');
+    }
+    const member = await db.members.findByUser(workspace.id, existing.id);
+    return {
+      user: existing,
+      workspace,
+      member,
+      token: generateToken({
+        userId: existing.id,
+        email: existing.email,
+        workspaceId: workspace.id,
+      }),
+    };
+  }
+
+  return registerUser(
+    normalized,
+    randomBytes(32).toString('hex'),
+    (name || displayNameFromEmail(normalized)).trim()
+  );
 }
 
 /**

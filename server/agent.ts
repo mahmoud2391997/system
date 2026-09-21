@@ -14,7 +14,9 @@ import {
   listGoogleCalendarEvents,
   sendGmailMessage,
   scheduleGoogleCalendarEvent,
+  getGmailConnectionMode,
 } from './googleClient.js';
+import { getPersonalMailbox, searchWeb } from './personalServices.js';
 
 let geminiClient: GoogleGenAI | null = null;
 
@@ -105,6 +107,18 @@ const agentToolDeclarations = [
     },
   },
   {
+    name: 'web_search_research',
+    description: 'Researches a query on the public web for personal grounding. No Google client IDs required.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        query: { type: Type.STRING, description: 'The search query or company name' },
+        depth: { type: Type.STRING, description: 'standard | deep' },
+      },
+      required: ['query'],
+    },
+  },
+  {
     name: 'send_whatsapp_message',
     description: 'Sends a WhatsApp business message (requires Phase 3 Meta verification).',
     parameters: {
@@ -155,6 +169,33 @@ const agentToolDeclarations = [
   },
 ];
 
+function extractInboxSearch(prompt: string): { query: string } | null {
+  const lower = prompt.toLowerCase().trim();
+  const isInboxAsk =
+    /search (my )?e-?mails?/.test(lower) ||
+    /find (my )?e-?mails?/.test(lower) ||
+    /any e-?mail/.test(lower) ||
+    /need .*e-?mail/.test(lower) ||
+    /e-?mails? from/.test(lower) ||
+    /e-?mail from/.test(lower) ||
+    /from \S+/.test(lower) && /e-?mail/.test(lower) ||
+    /read (my )?e-?mail/.test(lower) ||
+    /check (my )?(e-?mail|inbox)/.test(lower) ||
+    /look (in|through) (my )?(e-?mail|inbox)/.test(lower) ||
+    /\binbox\b/.test(lower);
+
+  if (!isInboxAsk) return null;
+
+  let query = '';
+  const fromMatch = prompt.match(/\bfrom\s+([^\s?.,]+)/i);
+  const forMatch = prompt.match(/\be-?mails?\s+for\s+(.+)/i);
+  if (fromMatch) query = fromMatch[1];
+  else if (forMatch) query = forMatch[1];
+  query = query.replace(/[?.!,]+$/g, '').trim();
+  if (!query || /^(my e-?mails? for|e-?mails?)$/i.test(query)) query = '';
+  return { query };
+}
+
 export class AgentOrchestrator {
   /**
    * Main entrypoint for processing user messages through Gemini function calling
@@ -182,8 +223,9 @@ Current tenant: ${context.workspace_id}. Current tier: ${context.features.tier}.
 Acting user: ${context.user_name} (${context.user_role}).
 Available Workspace Features: CRM=${context.features.crm_enabled}, Team=${context.features.team_enabled}, ERP=${context.features.erp_enabled}.
 
-When the user requests actions like sending emails, reading emails, booking calendar meetings, checking calendar, updating deals, or invoicing, call the appropriate function tool.
-Do NOT attempt to bypass permission policies. Always provide clear, objective operational updates.`;
+When the user asks about their own inbox — search emails, emails from a person or school, unread mail, “any email from X” — you MUST call read_emails with query set to that name (for example ischool). Never use web_search_research for the user's Gmail.
+When the user requests sending emails, booking calendar meetings, checking calendar, searching the public web, updating deals, or invoicing, call the appropriate function tool.
+Do NOT attempt to bypass permission policies. Always provide clear, objective operational updates. Personal Gmail and Calendar are already connected after Gmail login — do not tell the user to paste Google client IDs.`;
 
         // Format recent history for context
         const formattedHistory = conversationHistory.slice(-6).map((m) => ({
@@ -226,6 +268,20 @@ Do NOT attempt to bypass permission policies. Always provide clear, objective op
       reasoningSteps.push('GEMINI_API_KEY not configured. Falling back to local semantic parser.');
     }
 
+    const inboxSearch = extractInboxSearch(userPrompt);
+    if (inboxSearch && (!proposedTool || proposedTool === 'web_search_research')) {
+      proposedTool = 'read_emails';
+      toolParams = {
+        query: inboxSearch.query || undefined,
+        max_results: 10,
+      };
+      reasoningSteps.push(
+        inboxSearch.query
+          ? `Inbox search requested. Querying Gmail for: ${inboxSearch.query}`
+          : 'Inbox search requested. Listing recent Gmail messages.',
+      );
+    }
+
     // Fallback: If no tool was chosen by Gemini or API key was absent, perform semantic resolution
     if (!proposedTool) {
       const lower = userPrompt.toLowerCase();
@@ -234,7 +290,6 @@ Do NOT attempt to bypass permission policies. Always provide clear, objective op
         toolParams = { max_results: 5 };
       } else if (lower.includes('send email') || lower.includes('write email') || lower.includes('email to ') || lower.includes('draft email')) {
         proposedTool = 'send_email';
-        // Extract recipient if present
         const emailMatch = userPrompt.match(/[\w.-]+@[\w.-]+\.\w+/);
         toolParams = {
           recipient: emailMatch ? emailMatch[0] : 'partner@example.com',
@@ -253,6 +308,12 @@ Do NOT attempt to bypass permission policies. Always provide clear, objective op
           datetime: new Date(Date.now() + 24 * 3600000).toISOString(),
           duration_minutes: 30,
         };
+      } else if (
+        (lower.includes('search') || lower.includes('research') || lower.includes('look up')) &&
+        !/e-?mail|inbox/.test(lower)
+      ) {
+        proposedTool = 'web_search_research';
+        toolParams = { query: userPrompt.replace(/^(search|research|look up|google)\s+(the web\s+)?(for\s+)?/i, '').trim() || userPrompt };
       }
     }
 
@@ -280,7 +341,11 @@ Do NOT attempt to bypass permission policies. Always provide clear, objective op
 
     // Check if duplicate execution or pending approval exists
     const existingExecution = await db.toolExecutions.findByIdempotencyKey(context.workspace_id, idempotencyKey);
-    if (existingExecution) {
+    const isReadOnlyQuery =
+      proposedTool === 'read_emails' ||
+      proposedTool === 'list_calendar_events' ||
+      proposedTool === 'web_search_research';
+    if (existingExecution && !isReadOnlyQuery) {
       if (existingExecution.status === 'executed') {
         reasoningSteps.push(`Idempotency check: duplicate action detected (${idempotencyKey}). Returning cached result.`);
         const cachedMsg: AgentMessage = {
@@ -444,6 +509,8 @@ Do NOT attempt to bypass permission policies. Always provide clear, objective op
         toolResult = await readGmailMessages(context.workspace_id, toolParams);
       } else if (proposedTool === 'list_calendar_events') {
         toolResult = await listGoogleCalendarEvents(context.workspace_id, toolParams);
+      } else if (proposedTool === 'web_search_research') {
+        toolResult = await searchWeb(toolParams.query || userPrompt, toolParams.depth);
       } else {
         toolResult = { status: 'executed_safe_query', parameters: toolParams };
       }
@@ -488,11 +555,27 @@ Do NOT attempt to bypass permission policies. Always provide clear, objective op
 
     let outputText = '';
     if (toolError) {
-      outputText = `❌ **Tool Execution Error**\n\nFailed to query **${proposedTool}**: ${toolError}\n\n*If your Google account is not connected yet, please visit the **Integrations** tab to connect your Google Workspace account.*`;
+      outputText = `❌ **Tool Execution Error**\n\nFailed to query **${proposedTool}**: ${toolError}\n\n*Sign in with Gmail to enable inbox and calendar. Google client IDs are not required for the personal workspace.*`;
     } else if (proposedTool === 'read_emails') {
       const emails = toolResult as any[];
+      const query = String(toolParams.query || '').trim();
       if (emails.length === 0) {
-        outputText = `📬 **Gmail Inbox Query**: No recent emails found matching criteria.`;
+        const mailbox = await getPersonalMailbox(context.workspace_id);
+        const accountLabel = mailbox.email || 'this Gmail inbox';
+        const mode = await getGmailConnectionMode(context.workspace_id);
+        if (mode === 'gmail_imap') {
+          outputText = query
+            ? `📬 **Gmail search** for “${query}”: no matching messages in live Gmail for **${accountLabel}**.`
+            : `📬 **Gmail Inbox**: no recent messages in live Gmail for **${accountLabel}**.`;
+        } else if (mode === 'personal_gmail') {
+          outputText = query
+            ? `📬 **Gmail search** for “${query}”: no matching messages in **${accountLabel}**.`
+            : `📬 **Gmail Inbox**: no matching messages in **${accountLabel}**.`;
+        } else {
+          outputText = query
+            ? `📬 **Gmail search** for “${query}”: no matching messages in **${accountLabel}**.`
+            : `📬 **Gmail Inbox**: **${accountLabel}** has no messages in this workspace yet.`;
+        }
       } else {
         outputText = `📬 **Gmail Inbox Results** (${emails.length} messages found):\n\n` +
           emails.map((e, idx) => `**${idx + 1}. From: ${e.from}**\n- *Subject*: ${e.subject}\n- *Snippet*: ${e.snippet}`).join('\n\n');
@@ -502,8 +585,16 @@ Do NOT attempt to bypass permission policies. Always provide clear, objective op
       if (events.length === 0) {
         outputText = `📅 **Google Calendar Query**: No upcoming events found.`;
       } else {
-        outputText = `📅 **Upcoming Google Calendar Events** (${events.length} found):\n\n` +
-          events.map((e, idx) => `**${idx + 1}. ${e.title}**\n- *Time*: ${e.start} to ${e.end}\n- [Open Event in Google Calendar](${e.htmlLink})`).join('\n\n');
+        outputText = `📅 **Upcoming Calendar Events** (${events.length} found):\n\n` +
+          events.map((e, idx) => `**${idx + 1}. ${e.title}**\n- *Time*: ${e.start} to ${e.end}\n- [Open Event](${e.htmlLink})`).join('\n\n');
+      }
+    } else if (proposedTool === 'web_search_research') {
+      const results = (toolResult?.results || []) as Array<{ title: string; snippet: string; url: string }>;
+      if (results.length === 0) {
+        outputText = `🔎 **Web Search**: No public results found for “${toolResult?.query || toolParams.query}”.`;
+      } else {
+        outputText = `🔎 **Web Search** for “${toolResult.query}”:\n\n` +
+          results.map((r, idx) => `**${idx + 1}. ${r.title}**\n- ${r.snippet}\n- ${r.url}`).join('\n\n');
       }
     } else {
       outputText = `Query executed successfully.\n\`\`\`json\n${JSON.stringify(toolResult, null, 2)}\n\`\`\``;

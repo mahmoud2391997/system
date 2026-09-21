@@ -14,7 +14,7 @@ import {
   IntegrationStatus,
   WorkspaceTier,
 } from './types';
-import { Navigation, ActiveTab } from './components/Navigation';
+import { Navigation, ActiveTab, PLAN_HOME } from './components/Navigation';
 import { AITerminal } from './components/AITerminal';
 import { CRMView } from './components/CRMView';
 import { TeamView } from './components/TeamView';
@@ -102,26 +102,26 @@ export default function App() {
           setInventory(erpRes.inventory || []);
         }
       }
+      return (wsRes?.features?.tier ?? null) as WorkspaceTier | null;
     } catch (err) {
       console.error('Failed to load workspace data:', err);
+      return null;
     }
   }, [fetchWithAuth]);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('nexus_token');
-      if (!token) {
-        setCurrentUser(null);
-        setIsInitialLoading(false);
-        return;
-      }
       try {
         const res = await fetchWithAuth('/api/auth/me');
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated && data.user) {
+            if (data.token) {
+              localStorage.setItem('nexus_token', data.token);
+            }
             setCurrentUser(data.user);
-            await loadAllData();
+            const tier = await loadAllData();
+            if (tier) setActiveTab(PLAN_HOME[tier]);
             setIsInitialLoading(false);
             return;
           }
@@ -213,13 +213,7 @@ export default function App() {
         setFeatures(data.features);
         await loadAllData();
         setIsUpgradeModalOpen(false);
-        const homes: Record<WorkspaceTier, ActiveTab> = {
-          personal: 'terminal',
-          startup: 'crm',
-          team: 'team',
-          enterprise: 'erp',
-        };
-        setActiveTab(homes[targetTier]);
+        setActiveTab(PLAN_HOME[targetTier]);
       }
     } catch (err) {
       console.error('Error updating tier:', err);
@@ -256,7 +250,8 @@ export default function App() {
         onSuccess={async (authData) => {
           setCurrentUser(authData.user);
           setIsInitialLoading(true);
-          await loadAllData();
+          const tier = await loadAllData();
+          if (tier) setActiveTab(PLAN_HOME[tier]);
           setIsInitialLoading(false);
         }}
       />
@@ -301,6 +296,7 @@ export default function App() {
                 tasks={tasks}
                 onSelectTier={handleSelectTier}
                 isUpdatingTier={isUpdatingTier}
+                onOpenVault={() => setActiveTab('integrations')}
               />
             )}
             {activeTab === 'crm' && (

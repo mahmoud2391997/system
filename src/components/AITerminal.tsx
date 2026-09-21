@@ -68,6 +68,7 @@ interface AITerminalProps {
   tasks?: ProjectTask[];
   onSelectTier?: (tier: WorkspaceTier) => Promise<void>;
   isUpdatingTier?: boolean;
+  onOpenVault?: () => void;
 }
 
 const WELCOME_COPY =
@@ -95,6 +96,7 @@ export const AITerminal: React.FC<AITerminalProps> = ({
   integrations = [],
   auditLogs = [],
   tasks = [],
+  onOpenVault,
 }) => {
   const [draftSession, setDraftSession] = useState(true);
   const [command, setCommand] = useState('');
@@ -151,15 +153,14 @@ export const AITerminal: React.FC<AITerminalProps> = ({
     const calendarConnected = integrationConnected(integrations, 'calendar');
     const gmailConnected = integrationConnected(integrations, 'email');
     const whatsappConnected = integrationConnected(integrations, 'whatsapp');
-    const webSearchConnected = integrationConnected(integrations, 'search');
     const phoneConnected = integrationConnected(integrations, 'voice');
     return [
       { key: 'calendar', label: 'Schedule an event', icon: CalendarDays, prompt: 'Schedule an event for ', enabled: calendarConnected, reason: calendarConnected ? '' : 'Connect Calendar' },
       { key: 'email', label: 'Send an email', icon: Mail, prompt: 'Write an email to ', enabled: gmailConnected, reason: gmailConnected ? '' : 'Connect Gmail' },
-      { key: 'searchEmails', label: 'Search emails', icon: Mail, prompt: 'Search my emails for ', enabled: gmailConnected, reason: gmailConnected ? '' : 'Connect Gmail' },
+      { key: 'searchEmails', label: 'Search emails', icon: Mail, prompt: 'Find emails from ', enabled: gmailConnected, reason: gmailConnected ? '' : 'Connect Gmail' },
       { key: 'whatsapp', label: 'Send a WhatsApp message', icon: MessageCircle, prompt: 'Send a WhatsApp message to ', enabled: whatsappConnected, reason: whatsappConnected ? '' : 'Configure WhatsApp' },
       { key: 'task', label: 'Add a task', icon: Check, prompt: 'Add a task: ', enabled: true, reason: '' },
-      { key: 'search', label: 'Search the web', icon: Globe2, prompt: 'Search the web for ', enabled: webSearchConnected, reason: webSearchConnected ? '' : 'Enable web search' },
+      { key: 'search', label: 'Search the web', icon: Globe2, prompt: 'Search the web for ', enabled: true, reason: '' },
       { key: 'phone', label: 'Make a call', icon: Bell, prompt: 'Make a call to ', enabled: phoneConnected, reason: phoneConnected ? '' : 'Connect a phone provider' },
     ];
   }, [integrations]);
@@ -240,6 +241,10 @@ export const AITerminal: React.FC<AITerminalProps> = ({
 
   const runSuggestion = (item: (typeof suggestions)[number]) => {
     if (!item.enabled) return;
+    if (/(?:for|from|to|:)\s+$/i.test(item.prompt)) {
+      pickSuggestion(item);
+      return;
+    }
     void submitCommand(item.prompt);
   };
 
@@ -295,7 +300,7 @@ export const AITerminal: React.FC<AITerminalProps> = ({
       <div className="relative rounded-lg border border-input bg-background shadow-sm focus-within:ring-2 focus-within:ring-ring">
         <textarea
           ref={inputRef}
-          id="personal-prompt"
+          id="prompt"
           value={command}
           onChange={(event) => setCommand(event.target.value)}
           onKeyDown={(event) => {
@@ -557,7 +562,13 @@ export const AITerminal: React.FC<AITerminalProps> = ({
               <h2 className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Connections
               </h2>
-              <span className="text-xs text-primary">Manage</span>
+              <button
+                type="button"
+                onClick={() => onOpenVault?.()}
+                className="text-xs text-primary hover:underline"
+              >
+                Manage
+              </button>
             </div>
             <div className="space-y-2">
               {integrations.length === 0 ? (

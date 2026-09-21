@@ -9,8 +9,8 @@ import {
   AuditLogEntry,
   AgentMessage,
   IntegrationStatus,
-  WorkspaceTier,
 } from '../../src/types.js';
+import { getTierConfig, normalizeFeatures } from '../store.js';
 
 export interface UserRecord {
   id: string;
@@ -168,9 +168,36 @@ export const db = {
         } catch (err: any) {
           console.warn('[DB] PostgreSQL init warning:', err.message);
         }
+        try {
+          await pgPool.query(`
+            UPDATE workspace_features
+            SET tier = 'startup',
+                crm_enabled = TRUE,
+                team_enabled = FALSE,
+                erp_enabled = FALSE,
+                max_seats = 10,
+                automation_caps = '{"emails":500,"messages":1000,"calls":50}'::jsonb,
+                updated_at = NOW()
+            WHERE tier = 'personal'
+          `);
+        } catch (err: any) {
+          console.warn('[DB] Personal plan retirement skipped:', err.message);
+        }
         return;
       }
-      getFileDb();
+      const data = getFileDb();
+      let retiredPersonal = false;
+      for (const features of data.workspace_features) {
+        const normalized = normalizeFeatures(features);
+        if ((features.tier as string) !== normalized.tier) {
+          Object.assign(features, normalized);
+          retiredPersonal = true;
+        }
+      }
+      if (retiredPersonal) {
+        saveFileDb();
+        console.log('[DB] Retired Personal plan rows moved to Startup.');
+      }
       console.log(
         IS_SERVERLESS
           ? '[DB] Serverless in-memory/tmp store initialized.'
@@ -219,6 +246,22 @@ export const db = {
       data.users.push(user);
       saveFileDb();
       return user;
+    },
+
+    async list(): Promise<UserRecord[]> {
+      const pgPool = getPgPool();
+      if (pgPool) {
+        const res = await pgPool.query('SELECT id, email, name, avatar, created_at FROM users ORDER BY created_at ASC');
+        return res.rows.map((row) => ({
+          id: row.id,
+          email: row.email,
+          password_hash: '',
+          name: row.name,
+          avatar: row.avatar,
+          created_at: row.created_at,
+        }));
+      }
+      return getFileDb().users.map((user) => ({ ...user, password_hash: '' }));
     },
   },
 
@@ -323,7 +366,7 @@ export const db = {
       if (pgPool) {
         const res = await pgPool.query('SELECT * FROM workspace_features WHERE workspace_id = $1', [workspaceId]);
         if (res.rows[0]) {
-          return {
+          const stored: WorkspaceFeatures = {
             workspace_id: res.rows[0].workspace_id,
             tier: res.rows[0].tier,
             crm_enabled: res.rows[0].crm_enabled,
@@ -333,20 +376,27 @@ export const db = {
             automation_caps: typeof res.rows[0].automation_caps === 'string' ? JSON.parse(res.rows[0].automation_caps) : res.rows[0].automation_caps,
             automation_usage: typeof res.rows[0].automation_usage === 'string' ? JSON.parse(res.rows[0].automation_usage) : res.rows[0].automation_usage,
           };
+          const normalized = normalizeFeatures(stored);
+          if ((stored.tier as string) !== normalized.tier) {
+            return this.upsert(normalized);
+          }
+          return stored;
         }
       }
       const data = getFileDb();
       const existing = data.workspace_features.find((f) => f.workspace_id === workspaceId);
-      if (existing) return existing;
+      if (existing) {
+        const normalized = normalizeFeatures(existing);
+        if ((existing.tier as string) !== normalized.tier) {
+          return this.upsert(normalized);
+        }
+        return existing;
+      }
 
+      const startup = getTierConfig('startup');
       const fallback: WorkspaceFeatures = {
         workspace_id: workspaceId,
-        tier: 'personal',
-        crm_enabled: false,
-        team_enabled: false,
-        erp_enabled: false,
-        max_seats: 1,
-        automation_caps: { emails: 100, messages: 0, calls: 0 },
+        ...startup,
         automation_usage: { emails: 0, messages: 0, calls: 0 },
       };
       data.workspace_features.push(fallback);

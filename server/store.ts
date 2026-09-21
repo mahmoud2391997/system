@@ -74,15 +74,6 @@ export const defaultFeatures: WorkspaceFeatures = {
 
 export function getTierConfig(tier: WorkspaceTier): Omit<WorkspaceFeatures, 'workspace_id' | 'automation_usage'> {
   switch (tier) {
-    case 'personal':
-      return {
-        tier: 'personal',
-        crm_enabled: false,
-        team_enabled: false,
-        erp_enabled: false,
-        max_seats: 1,
-        automation_caps: { emails: 100, messages: 0, calls: 0 },
-      };
     case 'startup':
       return {
         tier: 'startup',
@@ -111,6 +102,18 @@ export function getTierConfig(tier: WorkspaceTier): Omit<WorkspaceFeatures, 'wor
         automation_caps: { emails: 20000, messages: 50000, calls: 2500 },
       };
   }
+}
+
+/** Retired Personal plan rows become Startup so existing workspaces stay usable. */
+export function normalizeFeatures(features: WorkspaceFeatures): WorkspaceFeatures {
+  const tier = features.tier as string;
+  if (tier === 'startup' || tier === 'team' || tier === 'enterprise') {
+    return { ...features, tier: tier as WorkspaceFeatures['tier'] };
+  }
+  return {
+    ...features,
+    ...getTierConfig('startup'),
+  };
 }
 
 export const defaultIntegrations: IntegrationStatus[] = [

@@ -32,12 +32,12 @@ CREATE TABLE IF NOT EXISTS workspace_members (
 
 CREATE TABLE IF NOT EXISTS workspace_features (
   workspace_id VARCHAR(64) PRIMARY KEY REFERENCES workspaces(id) ON DELETE CASCADE,
-  tier VARCHAR(32) NOT NULL DEFAULT 'personal',
-  crm_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  tier VARCHAR(32) NOT NULL DEFAULT 'startup',
+  crm_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   team_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   erp_enabled BOOLEAN NOT NULL DEFAULT FALSE,
-  max_seats INT NOT NULL DEFAULT 1,
-  automation_caps JSONB NOT NULL DEFAULT '{"emails":100,"messages":0,"calls":0}',
+  max_seats INT NOT NULL DEFAULT 10,
+  automation_caps JSONB NOT NULL DEFAULT '{"emails":500,"messages":1000,"calls":50}',
   automation_usage JSONB NOT NULL DEFAULT '{"emails":0,"messages":0,"calls":0}',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

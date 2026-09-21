@@ -1,5 +1,7 @@
 import { db } from './client.js';
 import { hashPassword } from '../crypto.js';
+import { connectPersonalGmail } from '../personalServices.js';
+import { getTierConfig } from '../store.js';
 
 export async function seedInitialData() {
   await db.init();
@@ -49,19 +51,10 @@ export async function seedInitialData() {
     status: 'active',
   });
 
-  // 4. Workspace Features - Grounded in Personal Tier
+  // 4. Workspace Features - Startup is the entry plan
   await db.features.upsert({
     workspace_id: workspaceId,
-    tier: 'personal',
-    crm_enabled: false,
-    team_enabled: false,
-    erp_enabled: false,
-    max_seats: 1,
-    automation_caps: {
-      emails: 100,
-      messages: 0,
-      calls: 0,
-    },
+    ...getTierConfig('startup'),
     automation_usage: {
       emails: 0,
       messages: 0,
@@ -69,31 +62,31 @@ export async function seedInitialData() {
     },
   });
 
-  // 5. Integrations - Honest state: Real Google Workspace available, others visibly disabled
+  // 5. Integrations - Personal Gmail/Calendar are live after Gmail login
   const defaultIntegrations = [
     {
       id: 'int_gmail',
       workspace_id: workspaceId,
-      provider: 'Google Cloud Platform',
-      name: 'Google Workspace Gmail API',
+      provider: 'Gmail',
+      name: 'Gmail',
       type: 'email' as const,
-      auth_type: 'OAuth 2.0 (Server-Side AES-256 Vault)',
+      auth_type: 'Gmail login (no Google client IDs)',
       connected: false,
-      scopes: 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly',
-      description: 'Send and read official workspace emails with zero prompt token leakage.',
+      scopes: 'personal.gmail.read personal.gmail.send',
+      description: 'Send and read mail for this Gmail account.',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
       id: 'int_calendar',
       workspace_id: workspaceId,
-      provider: 'Google Calendar v3',
-      name: 'Google Calendar API',
+      provider: 'Google Calendar',
+      name: 'Calendar',
       type: 'calendar' as const,
-      auth_type: 'Scoped Workspace OAuth',
+      auth_type: 'Gmail login (no Google client IDs)',
       connected: false,
-      scopes: 'https://www.googleapis.com/auth/calendar.events',
-      description: 'Book events, check free/busy slots, and dispatch verified meeting invites.',
+      scopes: 'personal.calendar.read personal.calendar.write',
+      description: 'Book events and inspect upcoming meetings.',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -127,11 +120,13 @@ export async function seedInitialData() {
     await db.integrations.upsert(int);
   }
 
+  await connectPersonalGmail(workspaceId, 'sarah.chen@apexhorizon.io');
+
   // 6. Initial Welcome Message
   await db.messages.create(workspaceId, {
     id: 'msg_welcome',
     sender: 'assistant',
-    text: `Welcome to **Nexus AI Operations Platform** (Personal Tier).\n\nYour workspace is scoped with durable database persistence and strict policy gating.\n\n- **Real Integrations**: Connect your official Gmail and Google Calendar credentials in the **Integrations** tab.\n- **Autonomous Guardrails**: Every outbound message or event is vetted by the **Policy Engine** and recorded to the immutable **Audit Ledger**.\n- **Idempotency**: All execution calls are tracked to prevent duplicate dispatches.`,
+    text: `Welcome to **Nexus** (Personal).\n\nSign in with Gmail and inbox, send, calendar, policy, and web search are ready. Google client IDs are not required.\n\nOutbound mail and new events still go through the Policy Engine and Audit Ledger.`,
     timestamp: new Date().toISOString(),
     reasoning_trace: [
       `Tenant database initialized: ${workspaceId}`,
