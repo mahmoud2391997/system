@@ -6,11 +6,11 @@ import {
   ApprovalAction,
   AuditLogEntry,
   AgentMessage,
-  LeadContact,
-  Deal,
+  CrmCatalog,
   ProjectTask,
-  Invoice,
-  InventoryItem,
+  TeamCatalog,
+  TeamTask,
+  ErpCatalog,
   IntegrationStatus,
   WorkspaceTier,
 } from './types';
@@ -25,6 +25,9 @@ import { UpgradeModal } from './components/UpgradeModal';
 import { AuthView } from './components/AuthView';
 import { Loader2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { crmCatalog } from './crmCatalog';
+import { teamCatalog } from './teamCatalog';
+import { erpCatalog } from './erpCatalog';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('terminal');
@@ -47,11 +50,10 @@ export default function App() {
   const [approvals, setApprovals] = useState<ApprovalAction[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [messages, setMessages] = useState<AgentMessage[]>([]);
-  const [contacts, setContacts] = useState<LeadContact[]>([]);
-  const [deals, setDeals] = useState<Deal[]>([]);
+  const [catalog, setCatalog] = useState<CrmCatalog>(crmCatalog);
+  const [teamBoard, setTeamBoard] = useState<TeamCatalog>(teamCatalog);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [erpBoard, setErpBoard] = useState<ErpCatalog>(erpCatalog);
 
   const fetchWithAuth = useCallback((url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('nexus_token');
@@ -84,22 +86,31 @@ export default function App() {
 
       if (wsRes?.features?.crm_enabled) {
         const crmRes = await fetchWithAuth('/api/crm').then((r) => r.ok ? r.json() : null);
-        if (crmRes && !crmRes.locked) {
-          setContacts(crmRes.contacts || []);
-          setDeals(crmRes.deals || []);
+        if (crmRes && !crmRes.locked && crmRes.catalog) {
+          setCatalog(crmRes.catalog);
         }
       }
       if (wsRes?.features?.team_enabled) {
         const teamRes = await fetchWithAuth('/api/team').then((r) => r.ok ? r.json() : null);
-        if (teamRes && !teamRes.locked) {
-          setTasks(teamRes.tasks || []);
+        if (teamRes && !teamRes.locked && teamRes.catalog) {
+          setTeamBoard(teamRes.catalog);
+          setTasks((teamRes.catalog.tasks as TeamTask[]).map((task) => ({
+            id: task.id,
+            workspace_id: wsRes.workspace.id,
+            title: task.title,
+            description: task.description,
+            assignee_name: task.assignee_name,
+            status: task.status === 'COMPLETED' ? 'done' : task.status === 'IN_PROGRESS' ? 'in_progress' : task.status === 'REVIEW' ? 'review' : 'todo',
+            priority: task.priority === 'URGENT' ? 'critical' : task.priority === 'HIGH' ? 'high' : task.priority === 'LOW' ? 'low' : 'medium',
+            due_date: task.due_date,
+            time_spent_hours: 0,
+          })));
         }
       }
       if (wsRes?.features?.erp_enabled) {
         const erpRes = await fetchWithAuth('/api/erp').then((r) => r.ok ? r.json() : null);
-        if (erpRes && !erpRes.locked) {
-          setInvoices(erpRes.invoices || []);
-          setInventory(erpRes.inventory || []);
+        if (erpRes && !erpRes.locked && erpRes.catalog) {
+          setErpBoard(erpRes.catalog);
         }
       }
       return (wsRes?.features?.tier ?? null) as WorkspaceTier | null;
@@ -222,11 +233,6 @@ export default function App() {
     }
   };
 
-  const handleTriggerAction = (prompt: string) => {
-    setActiveTab('terminal');
-    handleSendMessage(prompt);
-  };
-
   const handleSelectTab = (tab: ActiveTab) => {
     setActiveTab(tab);
   };
@@ -302,45 +308,22 @@ export default function App() {
             {activeTab === 'crm' && (
               <CRMView
                 features={features}
-                contacts={contacts}
-                deals={deals}
+                catalog={catalog}
                 onUpgradeInPlace={() => handleSelectTier('startup')}
-                onAdvanceDealStage={async (dealId, nextStage) => {
-                  setDeals((prev) => prev.map((d) => d.id === dealId ? { ...d, stage: nextStage } : d));
-                }}
-                onTriggerAction={handleTriggerAction}
               />
             )}
             {activeTab === 'team' && (
               <TeamView
                 features={features}
-                tasks={tasks}
-                members={members}
+                catalog={teamBoard}
                 onUpgradeInPlace={() => handleSelectTier('team')}
-                onCreateTask={(task) => {
-                  setTasks((prev) => [
-                    {
-                      id: `task_${Date.now()}`,
-                      workspace_id: workspace.id,
-                      title: task.title,
-                      priority: task.priority,
-                      assignee: task.assignee_name,
-                      status: 'todo',
-                      due_date: task.due_date || '2026-10-01',
-                    },
-                    ...prev,
-                  ]);
-                }}
-                onTriggerAction={handleTriggerAction}
               />
             )}
             {activeTab === 'erp' && (
               <ERPView
                 features={features}
-                invoices={invoices}
-                inventory={inventory}
+                catalog={erpBoard}
                 onUpgradeInPlace={() => handleSelectTier('enterprise')}
-                onTriggerAction={handleTriggerAction}
               />
             )}
             {activeTab === 'audit' && <AuditLedgerView auditLogs={auditLogs} />}
