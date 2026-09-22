@@ -39,8 +39,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
       id: 'team',
       name: 'Team',
       seats: '10–50 Users',
-      description: 'Multi-user workspace with real permissions, sprint boards, and task delegation.',
-      modules: ['All Startup Features', 'Projects & Sprint Boards', 'Role Matrix (Admin/Mgr)', 'Time Tracking'],
+      description: 'Team dashboard with departments, employees, and a task board.',
+      modules: ['All Startup Features', 'Departments & Employees', 'Task Kanban', 'Completion Tracking'],
       monthlyCaps: { emails: 2500, messages: 5000, calls: 300 },
     },
     {

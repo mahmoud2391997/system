@@ -296,7 +296,60 @@ export interface Deal {
   updated_at: string;
 }
 
-// Team Models (Team+)
+// Team Models (Team+) — same records as the team management dashboard
+export type TeamTaskStatus = 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED';
+export type TeamTaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type TeamEmployeeStatus = 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE';
+export type TeamRole = 'ADMIN' | 'MANAGER' | 'EMPLOYEE';
+
+export interface TeamDepartment {
+  id: string;
+  name: string;
+  description: string;
+  manager_id: string;
+  manager_name: string;
+}
+
+export interface TeamEmployee {
+  id: string;
+  profile_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: TeamRole | string;
+  position: string;
+  department_id: string;
+  department_name: string;
+  manager_name: string;
+  status: TeamEmployeeStatus | string;
+  salary: number;
+  join_date: string;
+}
+
+export interface TeamTask {
+  id: string;
+  title: string;
+  description: string;
+  status: TeamTaskStatus | string;
+  priority: TeamTaskPriority | string;
+  department_id: string;
+  department_name: string;
+  assignee_id: string;
+  assignee_name: string;
+  created_by_id: string;
+  created_by_name: string;
+  due_date: string;
+}
+
+export interface TeamCatalog {
+  viewer_id: string;
+  viewer_name: string;
+  viewer_role: string;
+  departments: TeamDepartment[];
+  employees: TeamEmployee[];
+  tasks: TeamTask[];
+}
+
 export interface ProjectTask {
   id: string;
   workspace_id: string;

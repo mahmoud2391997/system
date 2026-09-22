@@ -37,6 +37,7 @@ import {
 } from '../src/types.js';
 import { getTierConfig } from './store.js';
 import { crmCatalog } from '../src/crmCatalog.js';
+import { teamCatalog } from '../src/teamCatalog.js';
 
 dotenv.config();
 
@@ -1261,7 +1262,7 @@ export function createExpressApp(): express.Express {
         message: 'The Team management board is available starting on the Team tier.',
       });
     }
-    res.json({ tasks: previewTasks, preview_mode: true });
+    res.json({ tasks: previewTasks, catalog: teamCatalog, preview_mode: true });
   });
 
   apiRouter.get('/erp', requireAuth, async (req: AuthenticatedRequest, res) => {

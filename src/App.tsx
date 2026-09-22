@@ -8,6 +8,8 @@ import {
   AgentMessage,
   CrmCatalog,
   ProjectTask,
+  TeamCatalog,
+  TeamTask,
   Invoice,
   InventoryItem,
   IntegrationStatus,
@@ -25,6 +27,7 @@ import { AuthView } from './components/AuthView';
 import { Loader2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { crmCatalog } from './crmCatalog';
+import { teamCatalog } from './teamCatalog';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('terminal');
@@ -48,6 +51,7 @@ export default function App() {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [catalog, setCatalog] = useState<CrmCatalog>(crmCatalog);
+  const [teamBoard, setTeamBoard] = useState<TeamCatalog>(teamCatalog);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -89,8 +93,19 @@ export default function App() {
       }
       if (wsRes?.features?.team_enabled) {
         const teamRes = await fetchWithAuth('/api/team').then((r) => r.ok ? r.json() : null);
-        if (teamRes && !teamRes.locked) {
-          setTasks(teamRes.tasks || []);
+        if (teamRes && !teamRes.locked && teamRes.catalog) {
+          setTeamBoard(teamRes.catalog);
+          setTasks((teamRes.catalog.tasks as TeamTask[]).map((task) => ({
+            id: task.id,
+            workspace_id: wsRes.workspace.id,
+            title: task.title,
+            description: task.description,
+            assignee_name: task.assignee_name,
+            status: task.status === 'COMPLETED' ? 'done' : task.status === 'IN_PROGRESS' ? 'in_progress' : task.status === 'REVIEW' ? 'review' : 'todo',
+            priority: task.priority === 'URGENT' ? 'critical' : task.priority === 'HIGH' ? 'high' : task.priority === 'LOW' ? 'low' : 'medium',
+            due_date: task.due_date,
+            time_spent_hours: 0,
+          })));
         }
       }
       if (wsRes?.features?.erp_enabled) {
@@ -307,24 +322,8 @@ export default function App() {
             {activeTab === 'team' && (
               <TeamView
                 features={features}
-                tasks={tasks}
-                members={members}
+                catalog={teamBoard}
                 onUpgradeInPlace={() => handleSelectTier('team')}
-                onCreateTask={(task) => {
-                  setTasks((prev) => [
-                    {
-                      id: `task_${Date.now()}`,
-                      workspace_id: workspace.id,
-                      title: task.title,
-                      priority: task.priority,
-                      assignee: task.assignee_name,
-                      status: 'todo',
-                      due_date: task.due_date || '2026-10-01',
-                    },
-                    ...prev,
-                  ]);
-                }}
-                onTriggerAction={handleTriggerAction}
               />
             )}
             {activeTab === 'erp' && (
