@@ -341,6 +341,51 @@ export interface TeamTask {
   due_date: string;
 }
 
+export interface TeamMemberAccount {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: TeamRole | string;
+}
+
+export interface TeamInvitation {
+  id: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
+
+export interface TeamRoleDefinition {
+  id: string;
+  name: string;
+  label: string;
+  builtin: boolean;
+  permissions: string[];
+}
+
+export interface TeamNotification {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  read: boolean;
+  type: 'team_invitation' | 'task' | string;
+}
+
+export interface TeamProfile {
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  member_since: string;
+}
+
+export interface TeamInfo {
+  id: string;
+  name: string;
+}
+
 export interface TeamCatalog {
   viewer_id: string;
   viewer_name: string;
@@ -348,6 +393,12 @@ export interface TeamCatalog {
   departments: TeamDepartment[];
   employees: TeamEmployee[];
   tasks: TeamTask[];
+  team: TeamInfo;
+  profile: TeamProfile;
+  members: TeamMemberAccount[];
+  invitations: TeamInvitation[];
+  roles: TeamRoleDefinition[];
+  notifications: TeamNotification[];
 }
 
 export interface ProjectTask {

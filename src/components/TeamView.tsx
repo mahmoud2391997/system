@@ -4,12 +4,17 @@ import {
   TeamCatalog,
   TeamDepartment,
   TeamEmployee,
+  TeamInvitation,
+  TeamMemberAccount,
+  TeamNotification,
+  TeamRoleDefinition,
   TeamTask,
   WorkspaceFeatures,
 } from '../types';
 import {
   EMPLOYEE_STATUSES,
   STATUS_LABEL,
+  TEAM_PERMISSIONS,
   TEAM_PRIORITIES,
   TEAM_STATUSES,
 } from '../teamCatalog';
@@ -20,15 +25,49 @@ interface TeamViewProps {
   onUpgradeInPlace: (targetTier: 'team') => void;
 }
 
-type Section = 'dashboard' | 'employees' | 'departments' | 'tasks';
+type Section = 'dashboard' | 'employees' | 'departments' | 'tasks' | 'members' | 'roles' | 'settings' | 'profile' | 'notifications' | 'create-team';
 type TaskScope = 'all' | 'mine' | 'created';
 
-const SECTIONS: { id: Section; label: string }[] = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'employees', label: 'Employees' },
-  { id: 'departments', label: 'Departments' },
-  { id: 'tasks', label: 'Tasks' },
+const SECTION_GROUPS: { label: string; items: { id: Section; label: string }[] }[] = [
+  {
+    label: 'Main',
+    items: [
+      { id: 'dashboard', label: 'Dashboard' },
+      { id: 'employees', label: 'Employees' },
+      { id: 'departments', label: 'Departments' },
+      { id: 'tasks', label: 'Tasks' },
+    ],
+  },
+  {
+    label: 'Team',
+    items: [
+      { id: 'members', label: 'Members' },
+      { id: 'roles', label: 'Roles & Permissions' },
+      { id: 'settings', label: 'Settings' },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { id: 'profile', label: 'Profile' },
+      { id: 'notifications', label: 'Notifications' },
+      { id: 'create-team', label: 'Create Team' },
+    ],
+  },
 ];
+
+const SECTION_COPY: Record<Section, string> = {
+  dashboard: "Welcome back! Here's an overview of your team.",
+  employees: 'Manage your team members and their assignments',
+  departments: 'Manage your organizational departments',
+  tasks: 'Manage and track team tasks',
+  members: 'Invite and manage your team members',
+  roles: 'View your role and permissions',
+  settings: 'Manage your team',
+  profile: 'View your account details and reset your password',
+  notifications: 'All caught up',
+  'create-team': 'Set up a new team to get started',
+};
 
 const fieldClass = 'w-full px-3 py-2 border border-rule bg-paper-raised text-ink-text text-sm placeholder:text-ink-muted/70 focus:outline-none focus:border-amber';
 
@@ -67,6 +106,24 @@ export const TeamView: React.FC<TeamViewProps> = ({ features, catalog, onUpgrade
   const [departments, setDepartments] = useState(catalog.departments);
   const [employees, setEmployees] = useState(catalog.employees);
   const [tasks, setTasks] = useState(catalog.tasks);
+  const [members, setMembers] = useState<TeamMemberAccount[]>(catalog.members);
+  const [invitations, setInvitations] = useState<TeamInvitation[]>(catalog.invitations);
+  const [roles, setRoles] = useState<TeamRoleDefinition[]>(catalog.roles);
+  const [notifications, setNotifications] = useState<TeamNotification[]>(catalog.notifications);
+  const [teamName, setTeamName] = useState(catalog.team.name);
+  const [profile, setProfile] = useState(catalog.profile);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('EMPLOYEE');
+  const [inviteNote, setInviteNote] = useState('');
+  const [roleDraft, setRoleDraft] = useState({ name: '', label: '', permissions: [] as string[] });
+  const [showRoleForm, setShowRoleForm] = useState(false);
+  const [editingRole, setEditingRole] = useState<string | null>(null);
+  const [passwordForm, setPasswordForm] = useState({ current: '', next: '', confirm: '' });
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [profileMessage, setProfileMessage] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [createdTeam, setCreatedTeam] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [taskScope, setTaskScope] = useState<TaskScope>('all');
   const [query, setQuery] = useState('');
@@ -96,6 +153,12 @@ export const TeamView: React.FC<TeamViewProps> = ({ features, catalog, onUpgrade
     setDepartments(catalog.departments);
     setEmployees(catalog.employees);
     setTasks(catalog.tasks);
+    setMembers(catalog.members || []);
+    setInvitations(catalog.invitations || []);
+    setRoles(catalog.roles || []);
+    setNotifications(catalog.notifications || []);
+    setTeamName(catalog.team?.name || 'Demo Team');
+    setProfile(catalog.profile || { first_name: 'Sara', last_name: 'Miller', email: '', role: catalog.viewer_role, member_since: '' });
   }, [catalog]);
 
   const q = query.trim().toLowerCase();
@@ -126,7 +189,7 @@ export const TeamView: React.FC<TeamViewProps> = ({ features, catalog, onUpgrade
           </div>
           <h2 className="text-xl font-semibold text-paper tracking-tight mb-2">Team management is locked</h2>
           <p className="text-paper/70 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
-            The Team plan includes a dashboard, departments, employees, and a task board.
+            The Team plan includes Dashboard, Employees, Departments, Tasks, Members, Roles & Permissions, Settings, Profile, Notifications, and Create Team.
           </p>
           <button
             onClick={() => onUpgradeInPlace('team')}
@@ -234,13 +297,12 @@ export const TeamView: React.FC<TeamViewProps> = ({ features, catalog, onUpgrade
               Team · Role {catalog.viewer_role}
             </div>
             <h1 className="text-xl font-semibold text-ink-text mt-1">
-              {section === 'dashboard' ? 'Dashboard' : SECTIONS.find((item) => item.id === section)?.label}
+              {section === 'members' ? 'Team Members' : section === 'profile' ? 'My Profile' : section === 'create-team' ? 'Create Your Team' : SECTION_GROUPS.flatMap((group) => group.items).find((item) => item.id === section)?.label}
             </h1>
             <p className="text-sm text-ink-muted mt-1">
-              {section === 'dashboard' && "Welcome back! Here's an overview of your team."}
-              {section === 'employees' && 'Manage your team members and their assignments'}
-              {section === 'departments' && 'Manage your organizational departments'}
-              {section === 'tasks' && 'Manage and track team tasks'}
+              {section === 'notifications'
+                ? (notifications.some((item) => !item.read) ? `You have ${notifications.filter((item) => !item.read).length} unread notification${notifications.filter((item) => !item.read).length > 1 ? 's' : ''}` : 'All caught up')
+                : SECTION_COPY[section]}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -249,15 +311,22 @@ export const TeamView: React.FC<TeamViewProps> = ({ features, catalog, onUpgrade
             {section === 'tasks' && <button onClick={() => setModal('task')} className="px-3 py-1.5 bg-amber text-ink-950 text-sm font-semibold inline-flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Create Task</button>}
           </div>
         </div>
-        <div className="mt-4 flex gap-1 overflow-x-auto border border-rule bg-paper-inset p-1">
-          {SECTIONS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => { setSection(item.id); setQuery(''); setDepartmentFilter('all'); }}
-              className={`px-3 py-1.5 text-sm whitespace-nowrap ${section === item.id ? 'bg-amber text-ink-950 font-semibold' : 'text-ink-muted hover:text-ink-text'}`}
-            >
-              {item.label}
-            </button>
+        <div className="mt-4 space-y-2">
+          {SECTION_GROUPS.map((group) => (
+            <div key={group.label} className="flex items-center gap-2 overflow-x-auto">
+              <span className="w-16 shrink-0 text-[11px] uppercase tracking-wider text-ink-muted">{group.label}</span>
+              <div className="flex gap-1 border border-rule bg-paper-inset p-1">
+                {group.items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setSection(item.id); setQuery(''); setDepartmentFilter('all'); }}
+                    className={`px-3 py-1.5 text-sm whitespace-nowrap ${section === item.id ? 'bg-amber text-ink-950 font-semibold' : 'text-ink-muted hover:text-ink-text'}`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -444,6 +513,285 @@ export const TeamView: React.FC<TeamViewProps> = ({ features, catalog, onUpgrade
             );
           })}
         </div>
+      )}
+
+      {section === 'members' && (
+        <div className="space-y-4">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!inviteEmail.trim()) return;
+              setInvitations((prev) => [{ id: `inv-${Date.now()}`, email: inviteEmail.trim(), role: inviteRole, created_at: new Date().toISOString().slice(0, 10) }, ...prev]);
+              setInviteEmail('');
+              setInviteNote('Invitation sent');
+            }}
+            className="bg-paper-raised border border-rule p-4 space-y-3"
+          >
+            <h3 className="font-semibold">Invite Member</h3>
+            <p className="text-sm text-ink-muted">Send an invitation to join your team with a specific role</p>
+            <div className="flex flex-col md:flex-row gap-2">
+              <input required type="email" placeholder="member@example.com" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} className={fieldClass} />
+              <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value)} className="border border-rule bg-paper-raised px-3 py-2 text-sm">
+                {roles.map((role) => <option key={role.name} value={role.name}>{role.label}</option>)}
+              </select>
+              <button type="submit" className="px-3 py-2 bg-amber text-ink-950 text-sm font-semibold whitespace-nowrap">Send Invite</button>
+            </div>
+            {inviteNote && <p className="text-sm text-ok">{inviteNote}</p>}
+          </form>
+          {invitations.length > 0 && (
+            <div className="bg-paper-raised border border-rule p-4 space-y-3">
+              <h3 className="font-semibold">Pending Invitations ({invitations.length})</h3>
+              {invitations.map((invitation) => (
+                <div key={invitation.id} className="flex items-center justify-between border border-rule px-3 py-2">
+                  <div>
+                    <div className="font-medium">{invitation.email}</div>
+                    <div className="text-sm text-ink-muted">Role: {invitation.role} · Invited {invitation.created_at}</div>
+                  </div>
+                  <button onClick={() => setInvitations((prev) => prev.filter((item) => item.id !== invitation.id))} className="px-2 py-1 text-xs border border-rule text-danger">Revoke</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="bg-paper-raised border border-rule p-4 space-y-3">
+            <h3 className="font-semibold">Members ({members.length})</h3>
+            <p className="text-sm text-ink-muted">Manage team members and their roles. The last admin cannot be edited or removed.</p>
+            {members.map((member) => {
+              const isSelf = member.id === catalog.viewer_id;
+              const isLastAdmin = member.role === 'ADMIN' && members.filter((item) => item.role === 'ADMIN').length === 1;
+              return (
+                <div key={member.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-rule px-3 py-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 border border-rule bg-paper-inset flex items-center justify-center font-semibold">{member.first_name?.[0] || member.email[0]}</div>
+                    <div>
+                      <div className="font-medium">{member.first_name} {member.last_name} {isSelf && <span className="text-xs text-ink-muted">(You)</span>}</div>
+                      <div className="text-sm text-ink-muted">{member.email}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge value={member.role} />
+                    {isLastAdmin ? <span className="text-xs text-ink-muted italic">Last admin</span> : (
+                      <>
+                        {member.role !== 'ADMIN' && <button onClick={() => setMembers((prev) => prev.map((item) => item.id === member.id ? { ...item, role: 'ADMIN' } : item))} className="px-2 py-1 text-xs border border-rule">Make Admin</button>}
+                        {member.role === 'ADMIN' && <button onClick={() => setMembers((prev) => prev.map((item) => item.id === member.id ? { ...item, role: 'MANAGER' } : item))} className="px-2 py-1 text-xs border border-rule">Remove Admin</button>}
+                        <button onClick={() => setMembers((prev) => prev.filter((item) => item.id !== member.id))} className="px-2 py-1 text-xs border border-rule text-danger">Remove</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {section === 'roles' && (
+        <div className="space-y-4">
+          <div className="bg-paper-raised border border-rule p-4">
+            <div className="text-sm text-ink-muted">Your role</div>
+            <div className="text-lg font-semibold mt-1">{profile.role}</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(roles.find((role) => role.name === profile.role)?.permissions || []).map((key) => (
+                <span key={key} className="text-xs border border-rule px-2 py-1">{TEAM_PERMISSIONS.find((item) => item.key === key)?.label || key}</span>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button onClick={() => { setShowRoleForm((open) => !open); setEditingRole(null); setRoleDraft({ name: '', label: '', permissions: [] }); }} className="px-3 py-1.5 bg-amber text-ink-950 text-sm font-semibold">Create Custom Role</button>
+          </div>
+          {showRoleForm && (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (editingRole) {
+                  setRoles((prev) => prev.map((role) => role.id === editingRole ? { ...role, label: roleDraft.label || role.label, permissions: roleDraft.permissions } : role));
+                } else if (roleDraft.name && roleDraft.label) {
+                  setRoles((prev) => [...prev, { id: `role-${Date.now()}`, name: roleDraft.name.toUpperCase().replace(/\s+/g, '_'), label: roleDraft.label, builtin: false, permissions: roleDraft.permissions }]);
+                }
+                setShowRoleForm(false);
+                setEditingRole(null);
+              }}
+              className="bg-paper-raised border border-rule p-4 space-y-3"
+            >
+              <h3 className="font-semibold">{editingRole ? 'Edit Role' : 'Create Custom Role'}</h3>
+              <p className="text-sm text-ink-muted">Define a new role with specific permissions</p>
+              {!editingRole && <input required placeholder="Role Name (code) e.g. TEAM_LEAD" value={roleDraft.name} onChange={(event) => setRoleDraft({ ...roleDraft, name: event.target.value })} className={fieldClass} />}
+              <input required placeholder="Display Label e.g. Team Lead" value={roleDraft.label} onChange={(event) => setRoleDraft({ ...roleDraft, label: event.target.value })} className={fieldClass} />
+              <div className="text-sm font-medium">Permissions</div>
+              {['Dashboard', 'Employees', 'Departments', 'Tasks', 'Members', 'Roles', 'Settings', 'Team'].map((group) => (
+                <div key={group}>
+                  <div className="text-xs uppercase tracking-wider text-ink-muted mb-1">{group}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                    {TEAM_PERMISSIONS.filter((item) => item.group === group).map((permission) => (
+                      <label key={permission.key} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={roleDraft.permissions.includes(permission.key)}
+                          onChange={() => setRoleDraft((draft) => ({
+                            ...draft,
+                            permissions: draft.permissions.includes(permission.key)
+                              ? draft.permissions.filter((key) => key !== permission.key)
+                              : [...draft.permissions, permission.key],
+                          }))}
+                        />
+                        {permission.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <button type="submit" className="px-3 py-1.5 bg-amber text-ink-950 text-sm font-semibold">{editingRole ? 'Save Changes' : 'Create Role'}</button>
+                <button type="button" onClick={() => setShowRoleForm(false)} className="px-3 py-1.5 border border-rule text-sm">Cancel</button>
+              </div>
+            </form>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {roles.map((role) => (
+              <div key={role.id} className="bg-paper-raised border border-rule p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold">{role.label}</h3>
+                  <span className="text-[11px] text-ink-muted">{role.builtin ? 'Built-in' : 'Custom'}</span>
+                </div>
+                <p className="text-xs text-ink-muted mt-1">{role.name} · {role.permissions.length} permissions</p>
+                <p className="text-xs text-ink-muted mt-2">{role.builtin ? 'Built-in role — permissions affect all teams' : 'Custom role — edit permissions'}</p>
+                <button
+                  onClick={() => { setEditingRole(role.id); setRoleDraft({ name: role.name, label: role.label, permissions: [...role.permissions] }); setShowRoleForm(true); }}
+                  className="mt-3 px-2 py-1 text-xs border border-rule"
+                >
+                  Edit
+                </button>
+                {!role.builtin && <button onClick={() => setRoles((prev) => prev.filter((item) => item.id !== role.id))} className="mt-3 ml-2 px-2 py-1 text-xs border border-rule text-danger">Delete</button>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {section === 'settings' && (
+        <div className="space-y-4 max-w-3xl">
+          <div className="bg-paper-raised border border-rule p-4">
+            <h3 className="font-semibold">Team</h3>
+            <p className="text-sm text-ink-muted mb-3">Your team information</p>
+            <div className="font-medium">{teamName}</div>
+            <div className="text-sm text-ink-muted">Team ID: {catalog.team.id}</div>
+            <button onClick={() => setConfirmDelete(true)} className="mt-4 px-3 py-1.5 border border-danger text-danger text-sm">Delete Team</button>
+            {confirmDelete && (
+              <div className="mt-3 border border-danger/40 bg-danger-bg p-3 space-y-2">
+                <div className="font-medium text-danger">Delete Team</div>
+                <p className="text-sm">This will permanently delete the team, all departments, employees, and tasks. All members will be removed from the team.</p>
+                <div className="flex gap-2">
+                  <button onClick={() => { setConfirmDelete(false); setTeamName(`${teamName} (delete requested)`); }} className="px-3 py-1.5 bg-danger text-white text-sm">Yes, Delete Team</button>
+                  <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 border border-rule text-sm">Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+          {members.filter((member) => member.role === 'ADMIN').length > 1 && (
+            <div className="bg-paper-raised border border-rule p-4">
+              <h3 className="font-semibold">Leave Team</h3>
+              <p className="text-sm text-ink-muted mb-3">Remove yourself from this team. You will lose access to this team and all its data.</p>
+              <button onClick={() => setMembers((prev) => prev.filter((member) => member.id !== catalog.viewer_id))} className="px-3 py-1.5 border border-danger text-danger text-sm">Leave Team</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {section === 'profile' && (
+        <div className="space-y-4 max-w-2xl">
+          <div className="bg-paper-raised border border-rule p-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 border border-rule bg-paper-inset flex items-center justify-center text-xl font-semibold">{profile.first_name[0]}</div>
+              <div>
+                <div className="text-lg font-semibold">{profile.first_name} {profile.last_name}</div>
+                <div className="text-sm text-ink-muted">{profile.role}</div>
+              </div>
+            </div>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setProfileMessage('Name updated successfully');
+              }}
+              className="grid grid-cols-2 gap-2 max-w-md"
+            >
+              <label className="text-xs text-ink-muted">First Name
+                <input value={profile.first_name} onChange={(event) => setProfile({ ...profile, first_name: event.target.value })} className={`${fieldClass} mt-1`} />
+              </label>
+              <label className="text-xs text-ink-muted">Last Name
+                <input value={profile.last_name} onChange={(event) => setProfile({ ...profile, last_name: event.target.value })} className={`${fieldClass} mt-1`} />
+              </label>
+              <button type="submit" className="col-span-2 w-fit px-3 py-1.5 bg-amber text-ink-950 text-sm font-semibold">Save Name</button>
+            </form>
+            {profileMessage && <p className="text-sm text-ok">{profileMessage}</p>}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div><div className="text-ink-muted text-xs">Email</div>{profile.email}</div>
+              <div><div className="text-ink-muted text-xs">Role</div>{profile.role}</div>
+              <div><div className="text-ink-muted text-xs">Member Since</div>{profile.member_since}</div>
+            </div>
+          </div>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (passwordForm.next !== passwordForm.confirm) {
+                setPasswordMessage('New passwords do not match');
+                return;
+              }
+              setPasswordMessage('Password updated successfully');
+              setPasswordForm({ current: '', next: '', confirm: '' });
+            }}
+            className="bg-paper-raised border border-rule p-4 space-y-3 max-w-md"
+          >
+            <h3 className="font-semibold">Reset Password</h3>
+            <p className="text-sm text-ink-muted">Change your account password</p>
+            <input required type="password" placeholder="Enter current password" value={passwordForm.current} onChange={(event) => setPasswordForm({ ...passwordForm, current: event.target.value })} className={fieldClass} />
+            <input required minLength={6} type="password" placeholder="Enter new password" value={passwordForm.next} onChange={(event) => setPasswordForm({ ...passwordForm, next: event.target.value })} className={fieldClass} />
+            <input required minLength={6} type="password" placeholder="Confirm new password" value={passwordForm.confirm} onChange={(event) => setPasswordForm({ ...passwordForm, confirm: event.target.value })} className={fieldClass} />
+            {passwordMessage && <p className={`text-sm ${passwordMessage.includes('not') ? 'text-danger' : 'text-ok'}`}>{passwordMessage}</p>}
+            <button type="submit" className="px-3 py-1.5 bg-amber text-ink-950 text-sm font-semibold">Update Password</button>
+          </form>
+        </div>
+      )}
+
+      {section === 'notifications' && (
+        <div className="space-y-3 max-w-3xl">
+          {notifications.length === 0 && <div className="bg-paper-raised border border-rule p-8 text-center text-sm text-ink-muted">No notifications yet</div>}
+          {notifications.map((item) => (
+            <div key={item.id} className={`border border-rule p-4 ${item.read ? 'bg-paper-raised' : 'bg-paper-inset'}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-semibold">{item.title}</div>
+                  <p className="text-sm text-ink-muted mt-1">{item.message}</p>
+                  <div className="text-xs text-ink-muted mt-2">{new Date(item.created_at).toLocaleString()}</div>
+                </div>
+                {!item.read && <span className="mt-1 h-2 w-2 rounded-full bg-ink-text" />}
+              </div>
+              {item.type === 'team_invitation' && (
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => setNotifications((prev) => prev.map((note) => note.id === item.id ? { ...note, read: true, title: 'Invitation accepted' } : note))} className="px-3 py-1.5 bg-amber text-ink-950 text-sm font-semibold">Accept</button>
+                  <button onClick={() => setNotifications((prev) => prev.filter((note) => note.id !== item.id))} className="px-3 py-1.5 border border-rule text-sm">Decline</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {section === 'create-team' && (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!newTeamName.trim()) return;
+            setCreatedTeam(newTeamName.trim());
+            setTeamName(newTeamName.trim());
+            setNewTeamName('');
+          }}
+          className="bg-paper-raised border border-rule p-4 max-w-md space-y-3"
+        >
+          <label className="block text-sm">Team Name
+            <input required value={newTeamName} onChange={(event) => setNewTeamName(event.target.value)} className={`${fieldClass} mt-1`} placeholder="Team Name" />
+          </label>
+          <button type="submit" className="px-3 py-1.5 bg-amber text-ink-950 text-sm font-semibold">Create Team</button>
+          {createdTeam && <p className="text-sm text-ok">Created {createdTeam}. It is now the active team in Settings.</p>}
+        </form>
       )}
 
       {modal && (

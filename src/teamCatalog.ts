@@ -340,6 +340,75 @@ export const teamCatalog: TeamCatalog = {
       "created_by_name": "Omar Khan",
       "due_date": "2026-09-20"
     }
+  ],
+  "team": {
+    "id": "team-demo",
+    "name": "Demo Team"
+  },
+  "profile": {
+    "first_name": "Sara",
+    "last_name": "Miller",
+    "email": "freelancing589@gmail.com",
+    "role": "ADMIN",
+    "member_since": "2026-05-25"
+  },
+  "members": [
+    { "id": "u-admin", "first_name": "Sara", "last_name": "Miller", "email": "freelancing589@gmail.com", "role": "ADMIN" },
+    { "id": "u-mgr-eng", "first_name": "Omar", "last_name": "Khan", "email": "omar.khan@demo.com", "role": "MANAGER" },
+    { "id": "u-mgr-design", "first_name": "Lina", "last_name": "Hassan", "email": "lina.hassan@demo.com", "role": "MANAGER" },
+    { "id": "u-mgr-mkt", "first_name": "Nadia", "last_name": "Ali", "email": "nadia.ali@demo.com", "role": "MANAGER" },
+    { "id": "u-emp-h1", "first_name": "Sophia", "last_name": "Davis", "email": "sophia.davis@demo.com", "role": "EMPLOYEE" },
+    { "id": "u-emp-m2", "first_name": "Ethan", "last_name": "Taylor", "email": "ethan.taylor@demo.com", "role": "EMPLOYEE" },
+    { "id": "u-emp-m1", "first_name": "Ava", "last_name": "Martinez", "email": "ava.martinez@demo.com", "role": "EMPLOYEE" },
+    { "id": "u-emp-d2", "first_name": "Noah", "last_name": "Wilson", "email": "noah.wilson@demo.com", "role": "EMPLOYEE" },
+    { "id": "u-emp-d1", "first_name": "Mia", "last_name": "Garcia", "email": "mia.garcia@demo.com", "role": "EMPLOYEE" },
+    { "id": "u-emp-e3", "first_name": "Liam", "last_name": "Brown", "email": "liam.brown@demo.com", "role": "EMPLOYEE" },
+    { "id": "u-emp-e2", "first_name": "Emma", "last_name": "Jones", "email": "emma.jones@demo.com", "role": "EMPLOYEE" },
+    { "id": "u-emp-e1", "first_name": "Adam", "last_name": "Smith", "email": "adam.smith@demo.com", "role": "EMPLOYEE" }
+  ],
+  "invitations": [
+    { "id": "inv-1", "email": "jordan.lee@demo.com", "role": "EMPLOYEE", "created_at": "2026-09-21" }
+  ],
+  "roles": [
+    {
+      "id": "role-admin",
+      "name": "ADMIN",
+      "label": "Admin",
+      "builtin": true,
+      "permissions": ["dashboard.view", "employees.view", "employees.create", "employees.edit", "employees.delete", "departments.view", "departments.create", "departments.edit", "departments.delete", "tasks.view", "tasks.create", "tasks.edit", "tasks.delete", "tasks.assign", "members.view", "members.invite", "members.remove", "members.assign_role", "roles.manage", "settings.manage", "team.delete"]
+    },
+    {
+      "id": "role-manager",
+      "name": "MANAGER",
+      "label": "Manager",
+      "builtin": true,
+      "permissions": ["dashboard.view", "employees.view", "employees.create", "employees.edit", "departments.view", "departments.edit", "tasks.view", "tasks.create", "tasks.edit", "tasks.assign", "members.view", "members.invite"]
+    },
+    {
+      "id": "role-employee",
+      "name": "EMPLOYEE",
+      "label": "Employee",
+      "builtin": true,
+      "permissions": ["dashboard.view", "employees.view", "departments.view", "tasks.view"]
+    }
+  ],
+  "notifications": [
+    {
+      "id": "ntf-1",
+      "title": "Team invitation",
+      "message": "Lina Hassan invited you to collaborate with the Design department.",
+      "created_at": "2026-09-21T15:00:00.000Z",
+      "read": false,
+      "type": "team_invitation"
+    },
+    {
+      "id": "ntf-2",
+      "title": "Task completed",
+      "message": "Liam Brown completed Data backup audit.",
+      "created_at": "2026-09-20T11:30:00.000Z",
+      "read": true,
+      "type": "task"
+    }
   ]
 };
 
@@ -352,3 +421,27 @@ export const STATUS_LABEL: Record<string, string> = {
   REVIEW: 'Review',
   COMPLETED: 'Completed',
 };
+
+export const TEAM_PERMISSIONS: { key: string; label: string; group: string }[] = [
+  { key: 'dashboard.view', label: 'View Dashboard', group: 'Dashboard' },
+  { key: 'employees.view', label: 'View Employees', group: 'Employees' },
+  { key: 'employees.create', label: 'Create Employees', group: 'Employees' },
+  { key: 'employees.edit', label: 'Edit Employees', group: 'Employees' },
+  { key: 'employees.delete', label: 'Delete Employees', group: 'Employees' },
+  { key: 'departments.view', label: 'View Departments', group: 'Departments' },
+  { key: 'departments.create', label: 'Create Departments', group: 'Departments' },
+  { key: 'departments.edit', label: 'Edit Departments', group: 'Departments' },
+  { key: 'departments.delete', label: 'Delete Departments', group: 'Departments' },
+  { key: 'tasks.view', label: 'View Tasks', group: 'Tasks' },
+  { key: 'tasks.create', label: 'Create Tasks', group: 'Tasks' },
+  { key: 'tasks.edit', label: 'Edit Tasks', group: 'Tasks' },
+  { key: 'tasks.delete', label: 'Delete Tasks', group: 'Tasks' },
+  { key: 'tasks.assign', label: 'Assign Tasks', group: 'Tasks' },
+  { key: 'members.view', label: 'View Members', group: 'Members' },
+  { key: 'members.invite', label: 'Invite Members', group: 'Members' },
+  { key: 'members.remove', label: 'Remove Members', group: 'Members' },
+  { key: 'members.assign_role', label: 'Assign Roles to Members', group: 'Members' },
+  { key: 'roles.manage', label: 'Manage Roles', group: 'Roles' },
+  { key: 'settings.manage', label: 'Manage Settings', group: 'Settings' },
+  { key: 'team.delete', label: 'Delete Team', group: 'Team' },
+];
