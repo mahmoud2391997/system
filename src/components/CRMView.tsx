@@ -723,9 +723,14 @@ export const CRMView: React.FC<CRMViewProps> = ({ features, catalog, onUpgradeIn
             ))}
           </div>
           <div className="flex gap-1 border border-rule bg-paper-inset p-1 w-fit">
-            {(['leads', 'appointments', 'customers', 'agents'] as ReportTab[]).map((tab) => (
-              <button key={tab} onClick={() => setReportTab(tab)} className={`px-3 py-1.5 text-sm capitalize ${reportTab === tab ? 'bg-amber text-ink-950 font-semibold' : 'text-ink-muted'}`}>
-                {tab}
+            {([
+              ['leads', 'Leads'],
+              ['appointments', 'Appointments'],
+              ['customers', 'Customers'],
+              ['agents', 'Agents'],
+            ] as [ReportTab, string][]).map(([tab, label]) => (
+              <button key={tab} onClick={() => setReportTab(tab)} className={`px-3 py-1.5 text-sm ${reportTab === tab ? 'bg-amber text-ink-950 font-semibold' : 'text-ink-muted'}`}>
+                {label}
               </button>
             ))}
           </div>
