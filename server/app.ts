@@ -38,6 +38,7 @@ import {
 import { getTierConfig } from './store.js';
 import { crmCatalog } from '../src/crmCatalog.js';
 import { teamCatalog } from '../src/teamCatalog.js';
+import { erpCatalog } from '../src/erpCatalog.js';
 
 dotenv.config();
 
@@ -1271,10 +1272,10 @@ export function createExpressApp(): express.Express {
       return res.status(403).json({
         error: 'ERP module locked in current tier',
         locked: true,
-        message: 'The ERP financial ledger is available on the Enterprise tier.',
+        message: 'The factory ERP is available on the Enterprise tier.',
       });
     }
-    res.json({ invoices: previewInvoices, inventory: previewInventory, preview_mode: true });
+    res.json({ invoices: previewInvoices, inventory: previewInventory, catalog: erpCatalog, preview_mode: true });
   });
 
   app.use('/api', apiRouter);

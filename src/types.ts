@@ -443,6 +443,351 @@ export interface InventoryItem {
   unit_cost: number;
 }
 
+export interface ErpCompany {
+  nameAr: string;
+  nameEn: string;
+  address: string;
+  city: string;
+  country: string;
+  phone: string;
+  email: string;
+  crNumber: string;
+  vatNumber: string;
+  currency: string;
+  vatRatePct: number;
+  varianceThresholdPct: number;
+  notifyEmail: string;
+}
+
+export interface ErpUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  active: boolean;
+}
+
+export interface ErpAccount {
+  code: string;
+  nameAr: string;
+  type: string;
+}
+
+export interface ErpWarehouse {
+  key: string;
+  nameAr: string;
+  locations: { code: string; nameAr: string }[];
+}
+
+export interface ErpMaterial {
+  id: string;
+  code: string;
+  nameAr: string;
+  category: string;
+  unit: string;
+  minQty: number;
+  vatTreatment: string;
+  barcode: string;
+  active: boolean;
+}
+
+export interface ErpProduct {
+  id: string;
+  code: string;
+  nameAr: string;
+  unit: string;
+  salePrice: number;
+  vatTreatment: string;
+  barcode: string;
+  bagKg: number;
+  active: boolean;
+}
+
+export interface ErpParty {
+  id: string;
+  code: string;
+  nameAr: string;
+  vatNumber: string;
+  phone: string;
+  email: string;
+  address: string;
+}
+
+export interface ErpEmployee {
+  id: string;
+  code: string;
+  nameAr: string;
+  department: string;
+  jobTitle: string;
+  basicSalary: number;
+  active: boolean;
+}
+
+export interface ErpRecipe {
+  id: string;
+  productId: string;
+  nameAr: string;
+  baseOutputQty: number;
+  items: { materialId: string; qty: number }[];
+}
+
+export interface ErpBalance {
+  id: string;
+  warehouse: string;
+  itemType: string;
+  itemId: string;
+  batchNo: string;
+  qty: number;
+  unitCost: number;
+  expiryDate: string;
+  receivedAt: string;
+}
+
+export interface ErpLedgerEntry {
+  id: string;
+  at: string;
+  type: string;
+  warehouse: string;
+  itemType: string;
+  itemId: string;
+  batchNo: string;
+  qty: number;
+  unitCost: number;
+  prevQty: number;
+  newQty: number;
+  refType: string;
+  refId: string;
+  userId: string;
+  notes: string;
+}
+
+export interface ErpPurchaseOrder {
+  id: string;
+  number: string;
+  supplierId: string;
+  status: string;
+  notes: string;
+  lines: { materialId: string; qty: number; unitCost: number; receivedQty: number }[];
+  createdBy: string;
+  createdAt: string;
+  decidedBy?: string;
+  decidedAt?: string;
+}
+
+export interface ErpGoodsReceipt {
+  id: string;
+  number: string;
+  purchaseOrderId: string;
+  at: string;
+  createdBy: string;
+  lines: { materialId: string; qty: number; unitCost: number; batchNo: string; expiryDate: string }[];
+}
+
+export interface ErpTransfer {
+  id: string;
+  number: string;
+  from: string;
+  to: string;
+  at: string;
+  createdBy: string;
+  notes: string;
+  lines: { itemType: string; itemId: string; batchNo: string; qty: number }[];
+}
+
+export interface ErpAdjustment {
+  id: string;
+  number: string;
+  warehouse: string;
+  itemId: string;
+  batchNo: string;
+  delta: number;
+  reason: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface ErpProductionOrder {
+  id: string;
+  number: string;
+  productId: string;
+  recipeId: string;
+  plannedQty: number;
+  status: string;
+  expected: { materialId: string; expectedQty: number; actualQty: number; wasteQty: number }[];
+  actualOutputQty: number;
+  totalCost: number;
+  unitCost: number;
+  outputBatch: string;
+  varianceReason: string;
+  createdBy: string;
+  createdAt: string;
+  completedAt: string;
+}
+
+export interface ErpSalesInvoice {
+  id: string;
+  number: string;
+  customerId: string;
+  status: string;
+  issuedAt: string;
+  notes: string;
+  lines: {
+    productId: string;
+    qty: number;
+    unitPrice: number;
+    vatTreatment: string;
+    vatRatePct: number;
+    net: number;
+    vat: number;
+    total: number;
+    batchNo: string;
+    unitCost: number;
+  }[];
+  subtotal: number;
+  vatAmount: number;
+  total: number;
+  paidAmount: number;
+  createdBy: string;
+}
+
+export interface ErpPayment {
+  id: string;
+  number: string;
+  invoiceId: string;
+  amount: number;
+  method: string;
+  at: string;
+  createdBy: string;
+}
+
+export interface ErpWithdrawal {
+  id: string;
+  number: string;
+  productId: string;
+  qty: number;
+  notes: string;
+  at: string;
+}
+
+export interface ErpExpense {
+  id: string;
+  number: string;
+  category: string;
+  description: string;
+  amount: number;
+  vatTreatment: string;
+  payFrom: string;
+  status: string;
+  vatAmount: number;
+  total: number;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface ErpJournal {
+  id: string;
+  number: string;
+  at: string;
+  memo: string;
+  refType: string;
+  refId: string;
+  lines: { accountCode: string; debit: number; credit: number }[];
+}
+
+export interface ErpAttendance {
+  id: string;
+  employeeId: string;
+  date: string;
+  checkIn: string;
+  checkOut: string;
+  source: string;
+}
+
+export interface ErpPayroll {
+  id: string;
+  number: string;
+  month: string;
+  status: string;
+  lines: {
+    employeeId: string;
+    basic: number;
+    overtimeHours: number;
+    overtimeAmount: number;
+    allowances: number;
+    deductions: number;
+    gross: number;
+    net: number;
+  }[];
+  totalNet: number;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface ErpFactoryTask {
+  id: string;
+  title: string;
+  assigneeRole: string;
+  dueDate: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface ErpNotification {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  dedupeKey: string;
+  roles: string[];
+  read: boolean;
+  emailStatus: string;
+  at: string;
+}
+
+export interface ErpAuditLog {
+  id: string;
+  at: string;
+  userId: string;
+  userName: string;
+  action: string;
+  entity: string;
+  entityId: string;
+  detail: string;
+}
+
+export interface ErpCatalog {
+  company: ErpCompany;
+  rolePermissions: Record<string, string[]>;
+  users: ErpUser[];
+  accounts: ErpAccount[];
+  warehouses: ErpWarehouse[];
+  materials: ErpMaterial[];
+  products: ErpProduct[];
+  suppliers: ErpParty[];
+  customers: ErpParty[];
+  employees: ErpEmployee[];
+  recipes: ErpRecipe[];
+  balances: ErpBalance[];
+  ledger: ErpLedgerEntry[];
+  purchaseOrders: ErpPurchaseOrder[];
+  goodsReceipts: ErpGoodsReceipt[];
+  transfers: ErpTransfer[];
+  adjustments: ErpAdjustment[];
+  productionOrders: ErpProductionOrder[];
+  invoices: ErpSalesInvoice[];
+  payments: ErpPayment[];
+  withdrawals: ErpWithdrawal[];
+  expenses: ErpExpense[];
+  journals: ErpJournal[];
+  attendance: ErpAttendance[];
+  payrolls: ErpPayroll[];
+  tasks: ErpFactoryTask[];
+  notifications: ErpNotification[];
+  auditLogs: ErpAuditLog[];
+  sequences: Record<string, number>;
+  viewer: { id: string; fullName: string; role: string; email: string };
+}
+
 export interface IntegrationStatus {
   id: string;
   name: string;

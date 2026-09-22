@@ -10,8 +10,7 @@ import {
   ProjectTask,
   TeamCatalog,
   TeamTask,
-  Invoice,
-  InventoryItem,
+  ErpCatalog,
   IntegrationStatus,
   WorkspaceTier,
 } from './types';
@@ -28,6 +27,7 @@ import { Loader2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { crmCatalog } from './crmCatalog';
 import { teamCatalog } from './teamCatalog';
+import { erpCatalog } from './erpCatalog';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('terminal');
@@ -53,8 +53,7 @@ export default function App() {
   const [catalog, setCatalog] = useState<CrmCatalog>(crmCatalog);
   const [teamBoard, setTeamBoard] = useState<TeamCatalog>(teamCatalog);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [erpBoard, setErpBoard] = useState<ErpCatalog>(erpCatalog);
 
   const fetchWithAuth = useCallback((url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('nexus_token');
@@ -110,9 +109,8 @@ export default function App() {
       }
       if (wsRes?.features?.erp_enabled) {
         const erpRes = await fetchWithAuth('/api/erp').then((r) => r.ok ? r.json() : null);
-        if (erpRes && !erpRes.locked) {
-          setInvoices(erpRes.invoices || []);
-          setInventory(erpRes.inventory || []);
+        if (erpRes && !erpRes.locked && erpRes.catalog) {
+          setErpBoard(erpRes.catalog);
         }
       }
       return (wsRes?.features?.tier ?? null) as WorkspaceTier | null;
@@ -235,11 +233,6 @@ export default function App() {
     }
   };
 
-  const handleTriggerAction = (prompt: string) => {
-    setActiveTab('terminal');
-    handleSendMessage(prompt);
-  };
-
   const handleSelectTab = (tab: ActiveTab) => {
     setActiveTab(tab);
   };
@@ -329,10 +322,8 @@ export default function App() {
             {activeTab === 'erp' && (
               <ERPView
                 features={features}
-                invoices={invoices}
-                inventory={inventory}
+                catalog={erpBoard}
                 onUpgradeInPlace={() => handleSelectTier('enterprise')}
-                onTriggerAction={handleTriggerAction}
               />
             )}
             {activeTab === 'audit' && <AuditLedgerView auditLogs={auditLogs} />}

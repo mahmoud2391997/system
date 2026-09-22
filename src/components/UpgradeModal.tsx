@@ -47,8 +47,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
       id: 'enterprise',
       name: 'Enterprise',
       seats: '50+ Users (Custom)',
-      description: 'Full operational ERP coverage, dedicated schema isolation, and custom SLAs.',
-      modules: ['All Team Features', 'Full ERP & Invoicing', 'Inventory & Procurement', 'Dedicated Tenant Schema'],
+      description: 'Gulf Feed mill ERP: inventory and warehouses, production, taxed sales, payroll, and approvals.',
+      modules: ['All Team Features', 'Raw materials, warehouses, manufacturing', 'Sales invoices, VAT, and payroll', 'Approvals, roles, and audit log'],
       monthlyCaps: { emails: 20000, messages: 50000, calls: 2500 },
     },
   ];
