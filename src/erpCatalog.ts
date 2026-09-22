@@ -1,59 +1,59 @@
 import { ErpCatalog } from './types';
 
 export const ROLE_LABEL: Record<string, string> = {
-  GM: 'المدير العام',
-  ACCOUNTANT: 'المحاسب والموارد البشرية',
-  OPERATIONS: 'المستودع والإنتاج والمبيعات',
+  GM: 'General Manager',
+  ACCOUNTANT: 'Accountant and HR',
+  OPERATIONS: 'Warehouse, production, and sales',
 };
 
 export const STATUS_LABEL: Record<string, string> = {
-  PENDING_APPROVAL: 'بانتظار الاعتماد',
-  APPROVED: 'معتمد',
-  REJECTED: 'مرفوض',
-  RECEIVED: 'مستلم',
-  PARTIAL: 'تحصيل جزئي',
-  DRAFT: 'مسودة',
-  CONFIRMED: 'مؤكدة',
-  PAID: 'مدفوعة',
-  POSTED: 'مرحّل',
-  OPEN: 'مفتوحة',
-  CLOSED: 'منتهية',
-  COMPLETED: 'مكتمل',
-  IN_PROGRESS: 'قيد التنفيذ',
+  PENDING_APPROVAL: 'Pending approval',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  RECEIVED: 'Received',
+  PARTIAL: 'Partially paid',
+  DRAFT: 'Draft',
+  CONFIRMED: 'Confirmed',
+  PAID: 'Paid',
+  POSTED: 'Posted',
+  OPEN: 'Open',
+  CLOSED: 'Closed',
+  COMPLETED: 'Completed',
+  IN_PROGRESS: 'In progress',
 };
 
 export const VAT_LABEL: Record<string, string> = {
-  ZERO: 'صفرية',
-  STANDARD: 'خاضعة 5%',
-  EXEMPT: 'معفاة',
+  ZERO: 'Zero-rated',
+  STANDARD: 'Standard 5%',
+  EXEMPT: 'Exempt',
 };
 
 export const LEDGER_LABEL: Record<string, string> = {
-  PURCHASE_RECEIPT: 'استلام مشتريات',
-  TRANSFER_OUT: 'تحويل صادر',
-  TRANSFER_IN: 'تحويل وارد',
-  PRODUCTION_CONSUMPTION: 'استهلاك إنتاج',
-  PRODUCTION_OUTPUT: 'ناتج إنتاج',
-  SALE: 'بيع',
-  WITHDRAWAL: 'سحب',
-  ADJUSTMENT: 'تعديل مخزون',
+  PURCHASE_RECEIPT: 'Goods receipt',
+  TRANSFER_OUT: 'Transfer out',
+  TRANSFER_IN: 'Transfer in',
+  PRODUCTION_CONSUMPTION: 'Production consumption',
+  PRODUCTION_OUTPUT: 'Production output',
+  SALE: 'Sale',
+  WITHDRAWAL: 'Withdrawal',
+  ADJUSTMENT: 'Stock adjustment',
 };
 
 export const ACCOUNT_TYPE_LABEL: Record<string, string> = {
-  ASSET: 'أصول',
-  LIABILITY: 'خصوم',
-  EQUITY: 'حقوق ملكية',
-  REVENUE: 'إيرادات',
-  EXPENSE: 'مصروفات',
+  ASSET: 'Assets',
+  LIABILITY: 'Liabilities',
+  EQUITY: 'Equity',
+  REVENUE: 'Revenue',
+  EXPENSE: 'Expenses',
 };
 
 export const erpCatalog: ErpCatalog = {
   "company": {
-    "nameAr": "مصنع الخليج للأعلاف",
+    "nameAr": "Gulf Feed Mill",
     "nameEn": "Gulf Feed Mill",
-    "address": "المنطقة الصناعية، صحار",
-    "city": "صحار",
-    "country": "سلطنة عُمان",
+    "address": "Industrial Area, Sohar",
+    "city": "Sohar",
+    "country": "Sultanate of Oman",
     "phone": "+968 2675 1000",
     "email": "info@gulffeed.om",
     "crNumber": "1345789",
@@ -152,28 +152,28 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "user-gm",
       "email": "gm@factory.local",
-      "fullName": "سعيد الوهيبي",
+      "fullName": "Saeed Al Wahaibi",
       "role": "GM",
       "active": true
     },
     {
       "id": "user-admin",
       "email": "admin@factory.local",
-      "fullName": "سعيد الوهيبي",
+      "fullName": "Saeed Al Wahaibi",
       "role": "GM",
       "active": true
     },
     {
       "id": "user-acc",
       "email": "accounts@factory.local",
-      "fullName": "نورة العامرية",
+      "fullName": "Noura Al Amriya",
       "role": "ACCOUNTANT",
       "active": true
     },
     {
       "id": "user-ops",
       "email": "ops@factory.local",
-      "fullName": "سالم الحارثي",
+      "fullName": "Salem Al Harthi",
       "role": "OPERATIONS",
       "active": true
     }
@@ -181,113 +181,113 @@ export const erpCatalog: ErpCatalog = {
   "accounts": [
     {
       "code": "1100",
-      "nameAr": "مخزون مواد خام",
+      "nameAr": "Raw material inventory",
       "type": "ASSET"
     },
     {
       "code": "1200",
-      "nameAr": "إنتاج تحت التشغيل",
+      "nameAr": "Work in progress",
       "type": "ASSET"
     },
     {
       "code": "1300",
-      "nameAr": "مخزون منتجات نهائية",
+      "nameAr": "Finished goods inventory",
       "type": "ASSET"
     },
     {
       "code": "1400",
-      "nameAr": "ذمم العملاء",
+      "nameAr": "Accounts receivable",
       "type": "ASSET"
     },
     {
       "code": "1500",
-      "nameAr": "البنك",
+      "nameAr": "Bank",
       "type": "ASSET"
     },
     {
       "code": "2100",
-      "nameAr": "ذمم الموردين",
+      "nameAr": "Accounts payable",
       "type": "LIABILITY"
     },
     {
       "code": "2200",
-      "nameAr": "ضريبة القيمة المضافة — مخرجات",
+      "nameAr": "VAT payable — output",
       "type": "LIABILITY"
     },
     {
       "code": "2300",
-      "nameAr": "ضريبة القيمة المضافة — مدخلات",
+      "nameAr": "VAT receivable — input",
       "type": "ASSET"
     },
     {
       "code": "2400",
-      "nameAr": "رواتب مستحقة",
+      "nameAr": "Salaries payable",
       "type": "LIABILITY"
     },
     {
       "code": "2500",
-      "nameAr": "استقطاعات موظفين",
+      "nameAr": "Employee deductions",
       "type": "LIABILITY"
     },
     {
       "code": "3100",
-      "nameAr": "رأس المال",
+      "nameAr": "Capital",
       "type": "EQUITY"
     },
     {
       "code": "4100",
-      "nameAr": "إيرادات المبيعات",
+      "nameAr": "Sales revenue",
       "type": "REVENUE"
     },
     {
       "code": "5100",
-      "nameAr": "تكلفة المبيعات",
+      "nameAr": "Cost of sales",
       "type": "EXPENSE"
     },
     {
       "code": "6100",
-      "nameAr": "الرواتب",
+      "nameAr": "Payroll",
       "type": "EXPENSE"
     },
     {
       "code": "6200",
-      "nameAr": "مصروفات تشغيل",
+      "nameAr": "Operating expenses",
       "type": "EXPENSE"
     },
     {
       "code": "6300",
-      "nameAr": "فروقات المخزون",
+      "nameAr": "Inventory variances",
       "type": "EXPENSE"
     }
   ],
   "warehouses": [
     {
       "key": "WH_RAW",
-      "nameAr": "مستودع المواد الخام",
+      "nameAr": "Raw materials warehouse",
       "locations": [
         {
           "code": "A1",
-          "nameAr": "منطقة A1"
+          "nameAr": "Area A1"
         }
       ]
     },
     {
       "key": "WH_MFG",
-      "nameAr": "مستودع التصنيع",
+      "nameAr": "Manufacturing warehouse",
       "locations": [
         {
           "code": "M1",
-          "nameAr": "منطقة M1"
+          "nameAr": "Area M1"
         }
       ]
     },
     {
       "key": "WH_FG",
-      "nameAr": "مستودع المنتجات النهائية",
+      "nameAr": "Finished goods warehouse",
       "locations": [
         {
           "code": "F1",
-          "nameAr": "منطقة F1"
+          "nameAr": "Area F1"
         }
       ]
     }
@@ -296,9 +296,9 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "mat-18",
       "code": "RM-PRE",
-      "nameAr": "بريمكس فيتامينات",
-      "category": "إضافات",
-      "unit": "كجم",
+      "nameAr": "Vitamin premix",
+      "category": "Additives",
+      "unit": "kg",
       "minQty": 80,
       "vatTreatment": "STANDARD",
       "barcode": "RM-PRE",
@@ -307,9 +307,9 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "mat-15",
       "code": "RM-SALT",
-      "nameAr": "ملح طعام",
-      "category": "معادن",
-      "unit": "كجم",
+      "nameAr": "Table salt",
+      "category": "Minerals",
+      "unit": "kg",
       "minQty": 150,
       "vatTreatment": "STANDARD",
       "barcode": "RM-SALT",
@@ -318,9 +318,9 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "mat-12",
       "code": "RM-LIME",
-      "nameAr": "حجر جيري",
-      "category": "معادن",
-      "unit": "كجم",
+      "nameAr": "Limestone",
+      "category": "Minerals",
+      "unit": "kg",
       "minQty": 400,
       "vatTreatment": "STANDARD",
       "barcode": "RM-LIME",
@@ -329,9 +329,9 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "mat-9",
       "code": "RM-BRAN",
-      "nameAr": "نخالة قمح",
-      "category": "حبوب",
-      "unit": "كجم",
+      "nameAr": "Wheat bran",
+      "category": "Grains",
+      "unit": "kg",
       "minQty": 2500,
       "vatTreatment": "ZERO",
       "barcode": "RM-BRAN",
@@ -340,9 +340,9 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "mat-6",
       "code": "RM-SOYA",
-      "nameAr": "كسب فول الصويا",
-      "category": "بروتين",
-      "unit": "كجم",
+      "nameAr": "Soybean meal",
+      "category": "Protein",
+      "unit": "kg",
       "minQty": 4000,
       "vatTreatment": "ZERO",
       "barcode": "RM-SOYA",
@@ -351,9 +351,9 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "mat-3",
       "code": "RM-CORN",
-      "nameAr": "ذرة صفراء",
-      "category": "حبوب",
-      "unit": "كجم",
+      "nameAr": "Yellow corn",
+      "category": "Grains",
+      "unit": "kg",
       "minQty": 8000,
       "vatTreatment": "ZERO",
       "barcode": "RM-CORN",
@@ -364,8 +364,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "prd-25",
       "code": "FG-SHEEP",
-      "nameAr": "علف أغنام",
-      "unit": "كجم",
+      "nameAr": "Sheep feed",
+      "unit": "kg",
       "salePrice": 0.195,
       "vatTreatment": "STANDARD",
       "barcode": "FG-SHEEP",
@@ -375,8 +375,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "prd-23",
       "code": "FG-BROILER",
-      "nameAr": "علف دواجن لاحم",
-      "unit": "كجم",
+      "nameAr": "Broiler feed",
+      "unit": "kg",
       "salePrice": 0.215,
       "vatTreatment": "STANDARD",
       "barcode": "FG-BROILER",
@@ -386,8 +386,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "prd-21",
       "code": "FG-BEEF",
-      "nameAr": "علف تسمين أبقار",
-      "unit": "كجم",
+      "nameAr": "Beef fattening feed",
+      "unit": "kg",
       "salePrice": 0.18,
       "vatTreatment": "STANDARD",
       "barcode": "FG-BEEF",
@@ -399,76 +399,76 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "s-29",
       "code": "S-002",
-      "nameAr": "شركة ظفار للحبوب",
+      "nameAr": "Dhofar Grain Company",
       "vatNumber": "OM2200002222",
       "phone": "+968 2329 1100",
       "email": "",
-      "address": "صلالة"
+      "address": "Salalah"
     },
     {
       "id": "s-27",
       "code": "S-001",
-      "nameAr": "المطاحن العمانية",
+      "nameAr": "Oman Flour Mills",
       "vatNumber": "OM2200001111",
       "phone": "+968 2450 2200",
       "email": "",
-      "address": "مسقط، غلا الصناعية"
+      "address": "Muscat, Ghala Industrial"
     }
   ],
   "customers": [
     {
       "id": "c-33",
       "code": "C-002",
-      "nameAr": "شركة صحار للدواجن",
+      "nameAr": "Sohar Poultry Company",
       "vatNumber": "OM3300002222",
       "phone": "+968 2672 9090",
       "email": "",
-      "address": "صحار"
+      "address": "Sohar"
     },
     {
       "id": "c-31",
       "code": "C-001",
-      "nameAr": "مزارع الباطنة",
+      "nameAr": "Batinah Farms",
       "vatNumber": "OM3300001111",
       "phone": "+968 2680 4411",
       "email": "",
-      "address": "صحار"
+      "address": "Sohar"
     }
   ],
   "employees": [
     {
       "id": "emp-41",
       "code": "EMP-004",
-      "nameAr": "أحمد السعدي",
-      "department": "الإنتاج",
-      "jobTitle": "فني صيانة",
+      "nameAr": "Ahmed Al Saadi",
+      "department": "Production",
+      "jobTitle": "Maintenance technician",
       "basicSalary": 400,
       "active": true
     },
     {
       "id": "emp-39",
       "code": "EMP-003",
-      "nameAr": "نورة العامرية",
-      "department": "المالية",
-      "jobTitle": "محاسبة",
+      "nameAr": "Noura Al Amriya",
+      "department": "Finance",
+      "jobTitle": "Accountant",
       "basicSalary": 520,
       "active": true
     },
     {
       "id": "emp-37",
       "code": "EMP-002",
-      "nameAr": "سالم الحارثي",
-      "department": "المستودع",
-      "jobTitle": "أمين مستودع",
+      "nameAr": "Salem Al Harthi",
+      "department": "Warehouse",
+      "jobTitle": "Warehouse keeper",
       "basicSalary": 380,
       "active": true
     },
     {
       "id": "emp-35",
       "code": "EMP-001",
-      "nameAr": "خالد البلوشي",
-      "department": "الإنتاج",
-      "jobTitle": "مشغّل خط",
+      "nameAr": "Khalid Al Balushi",
+      "department": "Production",
+      "jobTitle": "Line operator",
       "basicSalary": 420,
       "active": true
     }
@@ -477,7 +477,7 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "rcp-45",
       "productId": "prd-23",
-      "nameAr": "وصفة دواجن لاحم — طن",
+      "nameAr": "Broiler recipe — per tonne",
       "baseOutputQty": 1000,
       "items": [
         {
@@ -509,7 +509,7 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "rcp-43",
       "productId": "prd-21",
-      "nameAr": "وصفة تسمين أبقار — طن",
+      "nameAr": "Beef fattening recipe — per tonne",
       "baseOutputQty": 1000,
       "items": [
         {
@@ -1134,7 +1134,7 @@ export const erpCatalog: ErpCatalog = {
       "number": "PO-2026-007",
       "supplierId": "s-27",
       "status": "PENDING_APPROVAL",
-      "notes": "تعويض نقص كسب الصويا",
+      "notes": "Cover the soybean meal shortage",
       "lines": [
         {
           "materialId": "mat-6",
@@ -1367,7 +1367,7 @@ export const erpCatalog: ErpCatalog = {
       "to": "WH_MFG",
       "at": "2026-09-10T16:00:00.000Z",
       "createdBy": "user-gm",
-      "notes": "صرف وصفة تسمين لأمر الإنتاج",
+      "notes": "Issue fattening recipe to the production order",
       "lines": [
         {
           "itemType": "MATERIAL",
@@ -1472,7 +1472,7 @@ export const erpCatalog: ErpCatalog = {
       "customerId": "c-31",
       "status": "PARTIAL",
       "issuedAt": "2026-09-11T16:00:00.000Z",
-      "notes": "تسليم مصنع — صحار",
+      "notes": "Mill delivery — Sohar",
       "lines": [
         {
           "productId": "prd-21",
@@ -1500,7 +1500,7 @@ export const erpCatalog: ErpCatalog = {
       "number": "PAY-2026-001",
       "invoiceId": "inv-134",
       "amount": 50,
-      "method": "تحويل بنكي",
+      "method": "Bank transfer",
       "at": "2026-09-11T22:00:00.000Z",
       "createdBy": "user-gm"
     }
@@ -1510,8 +1510,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "exp-146",
       "number": "EXP-2026-001",
-      "category": "طاقة",
-      "description": "ديزل المولد — أسبوع",
+      "category": "Energy",
+      "description": "Generator diesel — week",
       "amount": 85,
       "vatTreatment": "STANDARD",
       "payFrom": "BANK",
@@ -1527,7 +1527,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-141",
       "number": "JE-2026-012",
       "at": "2026-09-11T22:00:00.000Z",
-      "memo": "تحصيل PAY-2026-001",
+      "memo": "Collection PAY-2026-001",
       "refType": "salesPayment",
       "refId": "pay-140",
       "lines": [
@@ -1547,7 +1547,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-138",
       "number": "JE-2026-011",
       "at": "2026-09-11T16:00:00.000Z",
-      "memo": "تكلفة مبيعات INV-2026-001",
+      "memo": "Cost of sales INV-2026-001",
       "refType": "salesInvoice",
       "refId": "inv-134",
       "lines": [
@@ -1567,7 +1567,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-137",
       "number": "JE-2026-010",
       "at": "2026-09-11T16:00:00.000Z",
-      "memo": "فاتورة مبيعات INV-2026-001",
+      "memo": "Sales invoice INV-2026-001",
       "refType": "salesInvoice",
       "refId": "inv-134",
       "lines": [
@@ -1592,7 +1592,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-132",
       "number": "JE-2026-009",
       "at": "2026-09-11T04:00:00.000Z",
-      "memo": "إخراج إنتاج PR-2026-001",
+      "memo": "Production output PR-2026-001",
       "refType": "productionOrder",
       "refId": "prdord-121",
       "lines": [
@@ -1612,7 +1612,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-131",
       "number": "JE-2026-008",
       "at": "2026-09-11T04:00:00.000Z",
-      "memo": "استهلاك إنتاج PR-2026-001",
+      "memo": "Production consumption PR-2026-001",
       "refType": "productionOrder",
       "refId": "prdord-121",
       "lines": [
@@ -1632,7 +1632,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-99",
       "number": "JE-2026-007",
       "at": "2026-09-10T10:00:00.000Z",
-      "memo": "استلام مشتريات GR-2026-006",
+      "memo": "Goods receipt GR-2026-006",
       "refType": "goodsReceipt",
       "refId": "gr-96",
       "lines": [
@@ -1657,7 +1657,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-90",
       "number": "JE-2026-006",
       "at": "2026-09-09T16:00:00.000Z",
-      "memo": "استلام مشتريات GR-2026-005",
+      "memo": "Goods receipt GR-2026-005",
       "refType": "goodsReceipt",
       "refId": "gr-87",
       "lines": [
@@ -1682,7 +1682,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-81",
       "number": "JE-2026-005",
       "at": "2026-09-08T22:00:00.000Z",
-      "memo": "استلام مشتريات GR-2026-004",
+      "memo": "Goods receipt GR-2026-004",
       "refType": "goodsReceipt",
       "refId": "gr-78",
       "lines": [
@@ -1707,7 +1707,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-72",
       "number": "JE-2026-004",
       "at": "2026-09-08T04:00:00.000Z",
-      "memo": "استلام مشتريات GR-2026-003",
+      "memo": "Goods receipt GR-2026-003",
       "refType": "goodsReceipt",
       "refId": "gr-69",
       "lines": [
@@ -1727,7 +1727,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-63",
       "number": "JE-2026-003",
       "at": "2026-09-07T10:00:00.000Z",
-      "memo": "استلام مشتريات GR-2026-002",
+      "memo": "Goods receipt GR-2026-002",
       "refType": "goodsReceipt",
       "refId": "gr-60",
       "lines": [
@@ -1747,7 +1747,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-54",
       "number": "JE-2026-002",
       "at": "2026-09-06T16:00:00.000Z",
-      "memo": "استلام مشتريات GR-2026-001",
+      "memo": "Goods receipt GR-2026-001",
       "refType": "goodsReceipt",
       "refId": "gr-51",
       "lines": [
@@ -1767,7 +1767,7 @@ export const erpCatalog: ErpCatalog = {
       "id": "je-1",
       "number": "JE-2026-001",
       "at": "2026-09-01T04:00:00.000Z",
-      "memo": "رأس مال افتتاحي — البنك",
+      "memo": "Opening capital — bank",
       "refType": "capital",
       "refId": "bank",
       "lines": [
@@ -1874,7 +1874,7 @@ export const erpCatalog: ErpCatalog = {
   "tasks": [
     {
       "id": "task-160",
-      "title": "مراجعة نقص كسب الصويا قبل اعتماد أمر الشراء",
+      "title": "Review the soybean meal shortage before approving the purchase order",
       "assigneeRole": "GM",
       "dueDate": "2026-09-22",
       "status": "OPEN",
@@ -1885,8 +1885,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-150",
       "kind": "APPROVAL",
-      "title": "اعتماد مسير 2026-09",
-      "body": "الصافي 1732.5 ر.ع.",
+      "title": "Approve payroll 2026-09",
+      "body": "Net OMR 1,732.500",
       "dedupeKey": "appr:prl:payr-149",
       "roles": [
         "GM"
@@ -1898,8 +1898,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-147",
       "kind": "APPROVAL",
-      "title": "اعتماد مصروف EXP-2026-001",
-      "body": "ديزل المولد — أسبوع",
+      "title": "Approve expense EXP-2026-001",
+      "body": "Generator diesel — week",
       "dedupeKey": "appr:exp:exp-146",
       "roles": [
         "GM"
@@ -1911,8 +1911,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-144",
       "kind": "APPROVAL",
-      "title": "اعتماد أمر شراء PO-2026-007",
-      "body": "أمر شراء بانتظار اعتماد المدير العام.",
+      "title": "Approve purchase order PO-2026-007",
+      "body": "Purchase order waiting for the general manager.",
       "dedupeKey": "appr:po:po-143",
       "roles": [
         "GM"
@@ -1924,8 +1924,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-93",
       "kind": "APPROVAL",
-      "title": "اعتماد أمر شراء PO-2026-006",
-      "body": "أمر شراء بانتظار اعتماد المدير العام.",
+      "title": "Approve purchase order PO-2026-006",
+      "body": "Purchase order waiting for the general manager.",
       "dedupeKey": "appr:po:po-92",
       "roles": [
         "GM"
@@ -1937,8 +1937,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-84",
       "kind": "APPROVAL",
-      "title": "اعتماد أمر شراء PO-2026-005",
-      "body": "أمر شراء بانتظار اعتماد المدير العام.",
+      "title": "Approve purchase order PO-2026-005",
+      "body": "Purchase order waiting for the general manager.",
       "dedupeKey": "appr:po:po-83",
       "roles": [
         "GM"
@@ -1950,8 +1950,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-75",
       "kind": "APPROVAL",
-      "title": "اعتماد أمر شراء PO-2026-004",
-      "body": "أمر شراء بانتظار اعتماد المدير العام.",
+      "title": "Approve purchase order PO-2026-004",
+      "body": "Purchase order waiting for the general manager.",
       "dedupeKey": "appr:po:po-74",
       "roles": [
         "GM"
@@ -1963,8 +1963,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-66",
       "kind": "APPROVAL",
-      "title": "اعتماد أمر شراء PO-2026-003",
-      "body": "أمر شراء بانتظار اعتماد المدير العام.",
+      "title": "Approve purchase order PO-2026-003",
+      "body": "Purchase order waiting for the general manager.",
       "dedupeKey": "appr:po:po-65",
       "roles": [
         "GM"
@@ -1976,8 +1976,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-57",
       "kind": "APPROVAL",
-      "title": "اعتماد أمر شراء PO-2026-002",
-      "body": "أمر شراء بانتظار اعتماد المدير العام.",
+      "title": "Approve purchase order PO-2026-002",
+      "body": "Purchase order waiting for the general manager.",
       "dedupeKey": "appr:po:po-56",
       "roles": [
         "GM"
@@ -1989,8 +1989,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-48",
       "kind": "APPROVAL",
-      "title": "اعتماد أمر شراء PO-2026-001",
-      "body": "أمر شراء بانتظار اعتماد المدير العام.",
+      "title": "Approve purchase order PO-2026-001",
+      "body": "Purchase order waiting for the general manager.",
       "dedupeKey": "appr:po:po-47",
       "roles": [
         "GM"
@@ -2002,8 +2002,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-20",
       "kind": "LOW_STOCK",
-      "title": "مخزون منخفض: بريمكس فيتامينات",
-      "body": "الرصيد 0 كجم والحد الأدنى 80.",
+      "title": "Low stock: Vitamin premix",
+      "body": "On-hand 0 kg, minimum 80.",
       "dedupeKey": "low:mat-18",
       "roles": [
         "GM",
@@ -2016,8 +2016,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-17",
       "kind": "LOW_STOCK",
-      "title": "مخزون منخفض: ملح طعام",
-      "body": "الرصيد 0 كجم والحد الأدنى 150.",
+      "title": "Low stock: Table salt",
+      "body": "On-hand 0 kg, minimum 150.",
       "dedupeKey": "low:mat-15",
       "roles": [
         "GM",
@@ -2030,8 +2030,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-14",
       "kind": "LOW_STOCK",
-      "title": "مخزون منخفض: حجر جيري",
-      "body": "الرصيد 0 كجم والحد الأدنى 400.",
+      "title": "Low stock: Limestone",
+      "body": "On-hand 0 kg, minimum 400.",
       "dedupeKey": "low:mat-12",
       "roles": [
         "GM",
@@ -2044,8 +2044,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-11",
       "kind": "LOW_STOCK",
-      "title": "مخزون منخفض: نخالة قمح",
-      "body": "الرصيد 0 كجم والحد الأدنى 2500.",
+      "title": "Low stock: Wheat bran",
+      "body": "On-hand 0 kg, minimum 2500.",
       "dedupeKey": "low:mat-9",
       "roles": [
         "GM",
@@ -2058,8 +2058,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-8",
       "kind": "LOW_STOCK",
-      "title": "مخزون منخفض: كسب فول الصويا",
-      "body": "الرصيد 0 كجم والحد الأدنى 4000.",
+      "title": "Low stock: Soybean meal",
+      "body": "On-hand 0 kg, minimum 4000.",
       "dedupeKey": "low:mat-6",
       "roles": [
         "GM",
@@ -2072,8 +2072,8 @@ export const erpCatalog: ErpCatalog = {
     {
       "id": "ntf-5",
       "kind": "LOW_STOCK",
-      "title": "مخزون منخفض: ذرة صفراء",
-      "body": "الرصيد 0 كجم والحد الأدنى 8000.",
+      "title": "Low stock: Yellow corn",
+      "body": "On-hand 0 kg, minimum 8000.",
       "dedupeKey": "low:mat-3",
       "roles": [
         "GM",
@@ -2089,18 +2089,18 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-161",
       "at": "2026-09-13T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مهمة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create task",
       "entity": "task",
       "entityId": "task-160",
-      "detail": "مراجعة نقص كسب الصويا قبل اعتماد أمر الشراء"
+      "detail": "Review the soybean meal shortage before approving the purchase order"
     },
     {
       "id": "aud-159",
       "at": "2026-09-13T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "تسجيل حضور",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Record attendance",
       "entity": "attendance",
       "entityId": "att-158",
       "detail": "2026-09-20"
@@ -2109,8 +2109,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-157",
       "at": "2026-09-13T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "تسجيل حضور",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Record attendance",
       "entity": "attendance",
       "entityId": "att-156",
       "detail": "2026-09-20"
@@ -2119,8 +2119,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-155",
       "at": "2026-09-13T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "تسجيل حضور",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Record attendance",
       "entity": "attendance",
       "entityId": "att-154",
       "detail": "2026-09-20"
@@ -2129,8 +2129,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-153",
       "at": "2026-09-12T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "تسجيل حضور",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Record attendance",
       "entity": "attendance",
       "entityId": "att-152",
       "detail": "2026-09-20"
@@ -2139,8 +2139,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-151",
       "at": "2026-09-12T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مسير رواتب",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create payroll",
       "entity": "payroll",
       "entityId": "payr-149",
       "detail": "PRL-2026-001"
@@ -2149,8 +2149,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-148",
       "at": "2026-09-12T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مصروف",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create expense",
       "entity": "expense",
       "entityId": "exp-146",
       "detail": "EXP-2026-001"
@@ -2159,8 +2159,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-145",
       "at": "2026-09-12T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-143",
       "detail": "PO-2026-007"
@@ -2169,8 +2169,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-142",
       "at": "2026-09-11T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "تحصيل فاتورة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Collect invoice",
       "entity": "salesPayment",
       "entityId": "pay-140",
       "detail": "PAY-2026-001"
@@ -2179,8 +2179,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-139",
       "at": "2026-09-11T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "تأكيد فاتورة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Confirm invoice",
       "entity": "salesInvoice",
       "entityId": "inv-134",
       "detail": "INV-2026-001"
@@ -2189,8 +2189,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-135",
       "at": "2026-09-11T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء فاتورة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create invoice",
       "entity": "salesInvoice",
       "entityId": "inv-134",
       "detail": "INV-2026-001"
@@ -2199,8 +2199,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-133",
       "at": "2026-09-11T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إكمال الإنتاج",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Complete production",
       "entity": "productionOrder",
       "entityId": "prdord-121",
       "detail": "PR-2026-001"
@@ -2209,8 +2209,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-122",
       "at": "2026-09-10T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء أمر إنتاج",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create production order",
       "entity": "productionOrder",
       "entityId": "prdord-121",
       "detail": "PR-2026-001"
@@ -2219,8 +2219,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-120",
       "at": "2026-09-10T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "تحويل مخزون",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Transfer stock",
       "entity": "stockTransfer",
       "entityId": "tr-101",
       "detail": "TR-2026-001"
@@ -2229,8 +2229,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-100",
       "at": "2026-09-10T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "استلام بضاعة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Receive goods",
       "entity": "goodsReceipt",
       "entityId": "gr-96",
       "detail": "GR-2026-006"
@@ -2239,8 +2239,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-95",
       "at": "2026-09-10T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "اعتماد أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Approve purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-92",
       "detail": "PO-2026-006"
@@ -2249,8 +2249,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-94",
       "at": "2026-09-09T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-92",
       "detail": "PO-2026-006"
@@ -2259,8 +2259,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-91",
       "at": "2026-09-09T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "استلام بضاعة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Receive goods",
       "entity": "goodsReceipt",
       "entityId": "gr-87",
       "detail": "GR-2026-005"
@@ -2269,8 +2269,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-86",
       "at": "2026-09-09T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "اعتماد أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Approve purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-83",
       "detail": "PO-2026-005"
@@ -2279,8 +2279,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-85",
       "at": "2026-09-09T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-83",
       "detail": "PO-2026-005"
@@ -2289,8 +2289,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-82",
       "at": "2026-09-08T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "استلام بضاعة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Receive goods",
       "entity": "goodsReceipt",
       "entityId": "gr-78",
       "detail": "GR-2026-004"
@@ -2299,8 +2299,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-77",
       "at": "2026-09-08T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "اعتماد أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Approve purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-74",
       "detail": "PO-2026-004"
@@ -2309,8 +2309,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-76",
       "at": "2026-09-08T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-74",
       "detail": "PO-2026-004"
@@ -2319,8 +2319,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-73",
       "at": "2026-09-08T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "استلام بضاعة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Receive goods",
       "entity": "goodsReceipt",
       "entityId": "gr-69",
       "detail": "GR-2026-003"
@@ -2329,8 +2329,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-68",
       "at": "2026-09-07T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "اعتماد أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Approve purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-65",
       "detail": "PO-2026-003"
@@ -2339,8 +2339,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-67",
       "at": "2026-09-07T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-65",
       "detail": "PO-2026-003"
@@ -2349,8 +2349,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-64",
       "at": "2026-09-07T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "استلام بضاعة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Receive goods",
       "entity": "goodsReceipt",
       "entityId": "gr-60",
       "detail": "GR-2026-002"
@@ -2359,8 +2359,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-59",
       "at": "2026-09-07T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "اعتماد أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Approve purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-56",
       "detail": "PO-2026-002"
@@ -2369,8 +2369,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-58",
       "at": "2026-09-06T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-56",
       "detail": "PO-2026-002"
@@ -2379,8 +2379,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-55",
       "at": "2026-09-06T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "استلام بضاعة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Receive goods",
       "entity": "goodsReceipt",
       "entityId": "gr-51",
       "detail": "GR-2026-001"
@@ -2389,8 +2389,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-50",
       "at": "2026-09-06T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "اعتماد أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Approve purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-47",
       "detail": "PO-2026-001"
@@ -2399,8 +2399,8 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-49",
       "at": "2026-09-06T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء أمر شراء",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create purchase order",
       "entity": "purchaseOrder",
       "entityId": "po-47",
       "detail": "PO-2026-001"
@@ -2409,198 +2409,198 @@ export const erpCatalog: ErpCatalog = {
       "id": "aud-46",
       "at": "2026-09-05T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء وصفة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create recipe",
       "entity": "recipe",
       "entityId": "rcp-45",
-      "detail": "وصفة دواجن لاحم — طن"
+      "detail": "Broiler recipe — per tonne"
     },
     {
       "id": "aud-44",
       "at": "2026-09-05T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء وصفة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create recipe",
       "entity": "recipe",
       "entityId": "rcp-43",
-      "detail": "وصفة تسمين أبقار — طن"
+      "detail": "Beef fattening recipe — per tonne"
     },
     {
       "id": "aud-42",
       "at": "2026-09-05T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء موظف",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create employee",
       "entity": "employee",
       "entityId": "emp-41",
-      "detail": "أحمد السعدي"
+      "detail": "Ahmed Al Saadi"
     },
     {
       "id": "aud-40",
       "at": "2026-09-05T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء موظف",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create employee",
       "entity": "employee",
       "entityId": "emp-39",
-      "detail": "نورة العامرية"
+      "detail": "Noura Al Amriya"
     },
     {
       "id": "aud-38",
       "at": "2026-09-04T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء موظف",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create employee",
       "entity": "employee",
       "entityId": "emp-37",
-      "detail": "سالم الحارثي"
+      "detail": "Salem Al Harthi"
     },
     {
       "id": "aud-36",
       "at": "2026-09-04T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء موظف",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create employee",
       "entity": "employee",
       "entityId": "emp-35",
-      "detail": "خالد البلوشي"
+      "detail": "Khalid Al Balushi"
     },
     {
       "id": "aud-34",
       "at": "2026-09-04T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء عميل",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create customer",
       "entity": "customers",
       "entityId": "c-33",
-      "detail": "شركة صحار للدواجن"
+      "detail": "Sohar Poultry Company"
     },
     {
       "id": "aud-32",
       "at": "2026-09-04T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء عميل",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create customer",
       "entity": "customers",
       "entityId": "c-31",
-      "detail": "مزارع الباطنة"
+      "detail": "Batinah Farms"
     },
     {
       "id": "aud-30",
       "at": "2026-09-03T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مورد",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create supplier",
       "entity": "suppliers",
       "entityId": "s-29",
-      "detail": "شركة ظفار للحبوب"
+      "detail": "Dhofar Grain Company"
     },
     {
       "id": "aud-28",
       "at": "2026-09-03T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مورد",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create supplier",
       "entity": "suppliers",
       "entityId": "s-27",
-      "detail": "المطاحن العمانية"
+      "detail": "Oman Flour Mills"
     },
     {
       "id": "aud-26",
       "at": "2026-09-03T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء منتج",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create product",
       "entity": "product",
       "entityId": "prd-25",
-      "detail": "علف أغنام"
+      "detail": "Sheep feed"
     },
     {
       "id": "aud-24",
       "at": "2026-09-03T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء منتج",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create product",
       "entity": "product",
       "entityId": "prd-23",
-      "detail": "علف دواجن لاحم"
+      "detail": "Broiler feed"
     },
     {
       "id": "aud-22",
       "at": "2026-09-02T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء منتج",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create product",
       "entity": "product",
       "entityId": "prd-21",
-      "detail": "علف تسمين أبقار"
+      "detail": "Beef fattening feed"
     },
     {
       "id": "aud-19",
       "at": "2026-09-02T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مادة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create material",
       "entity": "material",
       "entityId": "mat-18",
-      "detail": "بريمكس فيتامينات"
+      "detail": "Vitamin premix"
     },
     {
       "id": "aud-16",
       "at": "2026-09-02T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مادة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create material",
       "entity": "material",
       "entityId": "mat-15",
-      "detail": "ملح طعام"
+      "detail": "Table salt"
     },
     {
       "id": "aud-13",
       "at": "2026-09-02T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مادة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create material",
       "entity": "material",
       "entityId": "mat-12",
-      "detail": "حجر جيري"
+      "detail": "Limestone"
     },
     {
       "id": "aud-10",
       "at": "2026-09-01T22:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مادة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create material",
       "entity": "material",
       "entityId": "mat-9",
-      "detail": "نخالة قمح"
+      "detail": "Wheat bran"
     },
     {
       "id": "aud-7",
       "at": "2026-09-01T16:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مادة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create material",
       "entity": "material",
       "entityId": "mat-6",
-      "detail": "كسب فول الصويا"
+      "detail": "Soybean meal"
     },
     {
       "id": "aud-4",
       "at": "2026-09-01T10:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "إنشاء مادة",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Create material",
       "entity": "material",
       "entityId": "mat-3",
-      "detail": "ذرة صفراء"
+      "detail": "Yellow corn"
     },
     {
       "id": "aud-2",
       "at": "2026-09-01T04:00:00.000Z",
       "userId": "user-gm",
-      "userName": "سعيد الوهيبي",
-      "action": "تمويل البنك",
+      "userName": "Saeed Al Wahaibi",
+      "action": "Bank funding",
       "entity": "journal",
       "entityId": "capital",
       "detail": "25000"
@@ -2619,7 +2619,7 @@ export const erpCatalog: ErpCatalog = {
   },
   "viewer": {
     "id": "user-gm",
-    "fullName": "سعيد الوهيبي",
+    "fullName": "Saeed Al Wahaibi",
     "role": "GM",
     "email": "gm@factory.local"
   }
