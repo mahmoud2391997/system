@@ -6,8 +6,7 @@ import {
   ApprovalAction,
   AuditLogEntry,
   AgentMessage,
-  LeadContact,
-  Deal,
+  CrmCatalog,
   ProjectTask,
   Invoice,
   InventoryItem,
@@ -25,6 +24,7 @@ import { UpgradeModal } from './components/UpgradeModal';
 import { AuthView } from './components/AuthView';
 import { Loader2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { crmCatalog } from './crmCatalog';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('terminal');
@@ -47,8 +47,7 @@ export default function App() {
   const [approvals, setApprovals] = useState<ApprovalAction[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [messages, setMessages] = useState<AgentMessage[]>([]);
-  const [contacts, setContacts] = useState<LeadContact[]>([]);
-  const [deals, setDeals] = useState<Deal[]>([]);
+  const [catalog, setCatalog] = useState<CrmCatalog>(crmCatalog);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -84,9 +83,8 @@ export default function App() {
 
       if (wsRes?.features?.crm_enabled) {
         const crmRes = await fetchWithAuth('/api/crm').then((r) => r.ok ? r.json() : null);
-        if (crmRes && !crmRes.locked) {
-          setContacts(crmRes.contacts || []);
-          setDeals(crmRes.deals || []);
+        if (crmRes && !crmRes.locked && crmRes.catalog) {
+          setCatalog(crmRes.catalog);
         }
       }
       if (wsRes?.features?.team_enabled) {
@@ -302,13 +300,8 @@ export default function App() {
             {activeTab === 'crm' && (
               <CRMView
                 features={features}
-                contacts={contacts}
-                deals={deals}
+                catalog={catalog}
                 onUpgradeInPlace={() => handleSelectTier('startup')}
-                onAdvanceDealStage={async (dealId, nextStage) => {
-                  setDeals((prev) => prev.map((d) => d.id === dealId ? { ...d, stage: nextStage } : d));
-                }}
-                onTriggerAction={handleTriggerAction}
               />
             )}
             {activeTab === 'team' && (

@@ -31,8 +31,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
       id: 'startup',
       name: 'Startup',
       seats: '2–10 Users',
-      description: 'The moment customers arrive: leads, deals pipeline, and automatic timeline logging.',
-      modules: ['AI Prompt', 'Full CRM & Deals Pipeline', 'Meta WhatsApp Business', 'Automated Timeline'],
+      description: 'Sales CRM with leads, customers, appointments, call logs, SMS, WhatsApp, and reports.',
+      modules: ['AI Prompt', 'Leads & Customers', 'Appointments, Calls, SMS, WhatsApp', 'Reports'],
       monthlyCaps: { emails: 500, messages: 1000, calls: 50 },
     },
     {

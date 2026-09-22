@@ -36,6 +36,7 @@ import {
   InventoryItem,
 } from '../src/types.js';
 import { getTierConfig } from './store.js';
+import { crmCatalog } from '../src/crmCatalog.js';
 
 dotenv.config();
 
@@ -1248,7 +1249,7 @@ export function createExpressApp(): express.Express {
         message: 'The CRM pipeline is available starting on the Startup tier.',
       });
     }
-    res.json({ contacts: previewContacts, deals: previewDeals, preview_mode: true });
+    res.json({ contacts: previewContacts, deals: previewDeals, catalog: crmCatalog, preview_mode: true });
   });
 
   apiRouter.get('/team', requireAuth, async (req: AuthenticatedRequest, res) => {

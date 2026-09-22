@@ -93,7 +93,172 @@ export interface AgentMessage {
   }[];
 }
 
-// CRM Models (Startup+)
+// CRM Models (Startup+) — record properties match the sales CRM prototype
+export type CrmLeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Proposal Sent' | 'Won' | 'Lost';
+export type CrmLeadSource = 'Website' | 'LinkedIn' | 'Referral' | 'Email Campaign' | 'Trade Show';
+export type CrmCustomerStatus = 'Active' | 'Inactive';
+export type CrmMeetingType = 'Video' | 'Call' | 'In-person';
+export type CrmAppointmentStatus = 'Scheduled' | 'Confirmed' | 'Completed' | 'No Show' | 'Cancelled' | 'Rescheduled';
+export type CrmCallOutcome = 'Answered' | 'Voicemail' | 'No Answer' | 'Busy';
+export type CrmRecordingStatus = 'Available' | 'Not Available';
+export type CrmDeliveryStatus = 'Delivered' | 'Pending' | 'Failed' | 'Sent';
+
+export interface CrmLead {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  company: string;
+  source: CrmLeadSource | string;
+  status: CrmLeadStatus | string;
+  assignedAgent: string;
+  createdDate: string;
+}
+
+export interface CrmCustomer {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  company: string;
+  country: string;
+  totalAppointments: number;
+  lastContactDate: string;
+  status: CrmCustomerStatus | string;
+  notes: string;
+}
+
+export interface CrmAppointment {
+  id: string;
+  customerName: string;
+  customerId: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  assignedAgent: string;
+  meetingType: CrmMeetingType | string;
+  status: CrmAppointmentStatus | string;
+  notes: string;
+}
+
+export interface CrmCallLog {
+  id: string;
+  customerName: string;
+  customerId: string;
+  phoneNumber: string;
+  agent: string;
+  callDate: string;
+  callDuration: string;
+  callOutcome: CrmCallOutcome | string;
+  recordingStatus: CrmRecordingStatus | string;
+  notes: string;
+}
+
+export interface CrmSmsMessage {
+  id: string;
+  customer: string;
+  customerId: string;
+  phoneNumber: string;
+  messagePreview: string;
+  sentDate: string;
+  deliveryStatus: CrmDeliveryStatus | string;
+}
+
+export interface CrmSmsTemplate {
+  id: string;
+  name: string;
+  content: string;
+}
+
+export interface CrmWhatsAppMessage {
+  id: string;
+  customerId: string;
+  customerName: string;
+  message: string;
+  timestamp: string;
+  sender: 'customer' | 'user';
+  type: 'text' | string;
+  status: 'Read' | 'Delivered' | 'Sent' | string;
+}
+
+export interface CrmActivity {
+  id: string;
+  type: 'lead' | 'appointment' | 'call' | 'sms' | 'whatsapp' | string;
+  description: string;
+  timestamp: string;
+  user: string;
+}
+
+export interface CrmNamedCount {
+  name: string;
+  value: number;
+}
+
+export interface CrmMonthPoint {
+  month: string;
+  value: number;
+}
+
+export interface CrmSourceStat {
+  source: string;
+  count: number;
+  percentage: number;
+}
+
+export interface CrmStatusStat {
+  status: string;
+  count: number;
+}
+
+export interface CrmAgentStat {
+  agent: string;
+  calls: number;
+  deals: number;
+}
+
+export interface CrmMetric {
+  label: string;
+  value: string;
+  trend: string;
+}
+
+export interface CrmCatalog {
+  leads: CrmLead[];
+  customers: CrmCustomer[];
+  appointments: CrmAppointment[];
+  calls: CrmCallLog[];
+  sms: CrmSmsMessage[];
+  templates: CrmSmsTemplate[];
+  whatsapp: CrmWhatsAppMessage[];
+  activities: CrmActivity[];
+  leadGrowth: CrmMonthPoint[];
+  customerAcquisition: CrmMonthPoint[];
+  appointmentStatus: CrmNamedCount[];
+  agents: CrmAgentStat[];
+  leadSources: CrmSourceStat[];
+  leadStatuses: CrmStatusStat[];
+  dashboard: {
+    newLeadsToday: number;
+    newLeadsTrend: string;
+    totalLeadsTrend: string;
+    activeCustomersTrend: string;
+    scheduledAppointmentsTrend: string;
+    completedAppointmentsTrend: string;
+    smsSentTrend: string;
+    whatsappTrend: string;
+    conversionRate: string;
+    conversionTrend: string;
+  };
+  reports: {
+    kpis: CrmMetric[];
+    totalCustomers: string;
+    totalCustomersTrend: string;
+    activeCustomers: string;
+    activeCustomersTrend: string;
+    avgCustomerValue: string;
+    avgCustomerValueTrend: string;
+  };
+}
+
 export interface ContactNote {
   id: string;
   author: string;
